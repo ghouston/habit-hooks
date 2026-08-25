@@ -28,10 +28,10 @@ guide lookup misses, the finding renders through `uncoached.md`, and the root
 `uncoached` key (default `suggest`) decides whether it fails the run.
 
 Two cops are unmapped **on purpose** rather than by omission, so do not "fix"
-them by adding rows. `Metrics/ClassLength` and `Metrics/ModuleLength` are the
-wrong shape: they measure a class or module, never a file, so neither can back
-a file-scoped smell. `oversized-file` comes from the generic plugin's line
-counter instead, as it does for Python and PHP.
+them by adding rows. `Metrics/ClassLength` and `Metrics/ModuleLength` measure a
+class or module, and the vocabulary has no class-scoped smell for them to back.
+They stay **uncoached** — forwarded under their own names, rendered through
+`uncoached.md`, `suggest` until a class and module scoped coach exists.
 
 The three complexity cops all map to `high-complexity` (human decision). They
 are correlated but independent — `PerceivedComplexity` weights nesting and

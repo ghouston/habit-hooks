@@ -21,10 +21,10 @@ breaks on one. An uncatalogued smell renders through ``uncoached.md``, and the
 root ``uncoached`` key (default ``suggest``) decides whether it fails the run.
 
 ``Metrics/ClassLength`` and ``Metrics/ModuleLength`` are the two cops
-deliberately unmapped and forwarded like anything else. They are the wrong
-shape, not a duplicate: they measure a class or module, never a file, so
-neither can back a file-scoped smell, and ``oversized-file`` comes from the
-generic ``line-count`` sensor instead, as it does for python and php.
+deliberately left uncoached: they measure a class or module, and the vocabulary
+has no class-scoped smell for them to back. Like every unmapped cop they are
+forwarded under their own names and rendered through ``uncoached.md``,
+``suggest`` until a class and module scoped coach exists.
 
 The three complexity cops share one smell on purpose. They are correlated but
 independent. A method tripping two cops keeps both measurements inside a single coaching
