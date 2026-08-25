@@ -1,16 +1,16 @@
-"""A broken ``rubocop`` must not read as clean — it must fail the sensor.
+"""A broken ``rubocop`` must not read as clean. It must fail the sensor.
 
 ``rubocop_crashed`` trusts exactly RuboCop's own contract (0 clean, 1 offences
 found); the boundary is exercised directly here, and the real-tool case below
 proves the whole helper honours it.
 
 The real-tool case is a ``.rubocop.yml`` naming cops from an extension gem the
-project has not got. That is not a contrived break: it is the single most likely
-way this sensor fails in the wild, because every Rails project's config names
-``rubocop-rails`` and the gem only loads under the project's own bundle. RuboCop
-answers it with an ``Error:`` and a non-zero exit, and the sensor has to carry
-that through rather than print an empty findings array — a false-clean run on a
-config problem is exactly what #88 exists to prevent.
+project has not got. That is not a contrived break. It is the single most
+likely way this sensor fails in the wild, because every Rails project's config
+names ``rubocop-rails`` and the gem only loads under the project's own bundle.
+RuboCop answers it with an ``Error:`` and a non-zero exit, and the sensor has
+to carry that through rather than print an empty findings array. A false-clean
+run on a config problem is exactly what #88 exists to prevent.
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ def _result(
 def test_rubocop_s_own_exit_codes_are_trusted_when_it_reported(
     returncode: int,
 ) -> None:
-    """0 is clean and 1 is "offences found" — a linter's way of saying it
+    """0 is clean and 1 is "offences found", a linter's way of saying it
     worked, *provided* it produced the report that says so."""
     assert _crashed(_result(returncode)) is False
 
@@ -68,10 +68,11 @@ def test_a_binstub_that_never_reached_rubocop_is_a_crash_not_a_clean_run() -> No
     """The regression this file is really about.
 
     `rubocop` is a RubyGems binstub with a `#!/usr/bin/env ruby` shebang. Point
-    it at an interpreter it is not installed into — a version manager off PATH,
-    the wrong bundle, macOS's system Ruby — and it dies in `find_spec_for_exe`
-    and exits **1**, the code that otherwise means "I found offences". Judged on
-    the exit code alone that is a clean file from a tool that never started.
+    it at an interpreter it is not installed into, whether a version manager
+    off PATH, the wrong bundle, or macOS's system Ruby, and it dies in
+    `find_spec_for_exe` and exits **1**, the code that otherwise means "I found
+    offences". Judged on the exit code alone that is a clean file from a tool
+    that never started.
     """
     crashed = _result(1, stdout="", stderr=BINSTUB_TRACEBACK)
 
@@ -86,7 +87,7 @@ def test_a_binstub_that_never_reached_rubocop_is_a_crash_not_a_clean_run() -> No
 )
 def test_output_that_is_not_a_report_is_a_crash(stdout: str) -> None:
     """RuboCop prints its JSON envelope on every run it completed, down to
-    `"files": []` when it inspected nothing — so anything else is a run that did
+    `"files": []` when it inspected nothing. Anything else is a run that did
     not happen, whatever it exited with. `files` is the key that makes it a
     report; valid JSON alone is not enough."""
     assert _crashed(_result(1, stdout=stdout)) is True
@@ -123,7 +124,7 @@ def test_a_config_naming_an_unloadable_gem_s_cops_fails_the_run(
 
 
 def test_an_unreadable_config_fails_the_run(tmp_path: Path, rubocop: str) -> None:
-    """A `.rubocop.yml` that is not YAML at all — the typo case, which must be a
+    """A `.rubocop.yml` that is not YAML at all, the typo case, which must be a
     named failure rather than a run that quietly measured nothing."""
     (tmp_path / ".rubocop.yml").write_text("\tnot: [valid\n", encoding="utf-8")
     (tmp_path / "app.rb").write_text("puts 'hi'\n", encoding="utf-8")

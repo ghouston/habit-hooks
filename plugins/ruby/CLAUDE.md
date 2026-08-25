@@ -8,9 +8,8 @@ The sensor passes no `--only` and no `--config`. RuboCop finds the project's
 config by its own upward walk, so a project's habit-hooks run is the run it gets
 from RuboCop directly. There is no shipped fallback config, and the plugin never
 writes one into a project. The README carries a suggested `.rubocop.yml` as
-documentation only.
-
-The reason for this one is that RuboCop's config already exists in almost every real Ruby project.
+documentation only — unlike jscpd or pmd, RuboCop's config already exists in
+almost every real Ruby project, so this plugin has no fallback case to cover.
 
 `--force-exclusion` is the one flag the sensor adds, and it is not optional.
 RuboCop applies `AllCops: Exclude:` to the files it *discovers*, but treats a
@@ -20,17 +19,22 @@ exclusions would stop meaning anything the moment this tool ran.
 
 ### An unmapped cop is forwarded, not dropped
 
-This exception to "a sensor emits vocabulary smells only" in the
-root `CLAUDE.md`. Forwarding it forwards the project's own decision.
+This is the same exception to "a sensor emits vocabulary smells only" that the
+root `CLAUDE.md` makes for eslint: a cop that fired is one the project's own
+`.rubocop.yml` turned on, so forwarding it forwards the project's own decision.
 
 The smell key is the cop name verbatim, `Style/StringLiterals`. Nothing downstream breaks on one: the
 guide lookup misses, the finding renders through `uncoached.md`, and the root
 `uncoached` key (default `suggest`) decides whether it fails the run.
 
-Three cops are unmapped **on purpose** rather than by omission, so do not "fix"
-them by adding rows. `Metrics/AbcSize` and `Metrics/PerceivedComplexity` measure
-what `Metrics/CyclomaticComplexity` already measures, and mapping them would
-report one method three times
+Four cops are unmapped **on purpose** rather than by omission, so do not "fix"
+them by adding rows — for two unrelated reasons. `Metrics/AbcSize` and
+`Metrics/PerceivedComplexity` are redundant with `Metrics/CyclomaticComplexity`:
+all three measure a method's complexity, so mapping all three would report one
+method three times over. `Metrics/ClassLength` and `Metrics/ModuleLength` are
+the wrong shape rather than a duplicate: they measure a class or module, never
+a file, so neither can back a file-scoped smell. `oversized-file` comes from
+the generic plugin's line counter instead, as it does for Python and PHP.
 
 ## Gotchas
 

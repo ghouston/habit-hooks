@@ -4,7 +4,7 @@
 resolves it to a file and passes that file as the helper's first argument.
 Handing over the file is the whole point: a bare name is looked up again by
 whatever spawns it, and Windows' ``CreateProcess`` adds ``.exe`` and nothing
-else — where RubyGems installs rubocop as a ``.bat`` shim, and
+else, where RubyGems installs rubocop as a ``.bat`` shim, and
 ``bundle binstubs`` writes a ``.cmd``.
 
 A ``PATH`` that cannot answer ``rubocop`` is what proves the helper takes it: a
@@ -15,8 +15,8 @@ the file runs a tool no search path leads to.
 do.** ``rubocop`` is not a program; it is a RubyGems binstub that begins
 ``#!/usr/bin/env ruby``, and it is installed into the very directory its
 interpreter lives in. Taking ``rubocop`` off ``PATH`` therefore takes ``ruby``
-with it, and the binstub then falls through to whatever ``ruby`` answers next —
-on a Mac, the system 2.6, which has no rubocop gem and dies in
+with it, and the binstub then falls through to whatever ``ruby`` answers next,
+on a Mac the system 2.6, which has no rubocop gem and dies in
 ``find_spec_for_exe``. That is a real failure and the sensor is right to fail on
 it (``test_a_crashing_rubocop_fails_the_run``), but it is not the question here,
 so ``ruby`` alone is handed back on a directory of its own. What is left cannot
@@ -50,7 +50,7 @@ def _where_only_the_interpreter_is_left(bin_dir: Path) -> dict[str, str]:
     """
     interpreter = shutil.which("ruby")
     if interpreter is None:
-        pytest.fail("ruby is not on PATH — rubocop cannot run without it")
+        pytest.fail("ruby is not on PATH, rubocop cannot run without it")
     bin_dir.mkdir(parents=True, exist_ok=True)
     (bin_dir / "ruby").symlink_to(interpreter)
 

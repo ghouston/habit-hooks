@@ -77,7 +77,7 @@ jobs:
       # unpinned lint tool turns every new cop into a CI failure on a commit
       # that did not cause it. Bumping it means changing this one line.
       - name: Install rubocop
-        run: gem install --no-document rubocop -v 1.86.1
+        run: gem install --no-document rubocop -v 1.89.0
       - name: Test
         run: uv run pytest
       # Dogfooding: habit-hooks gates its own source. Without this the tool can

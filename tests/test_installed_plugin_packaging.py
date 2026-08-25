@@ -109,7 +109,7 @@ def test_installed_ruby_plugin_runs_its_rubocop_pipeline(
 ) -> None:
     """The rubocop sensor runs a Python helper beside its spec, and packaging can
     lose either of the two. It ships no config of its own, so what an installed
-    run has to carry is the pair — and a lost sensor is a smell nobody is ever
+    run has to carry is the pair. A lost sensor is a smell nobody is ever
     told about."""
     require_tool("rubocop")
     project = ruby_project(tmp_path)

@@ -1,13 +1,13 @@
 """The helper wired to the real ``rubocop``.
 
 The pure mapping is covered by ``test_the_rubocop_pipeline_maps_cops_to_smells``;
-this proves RuboCop's own output still has the shape that mapping expects — its
+this proves RuboCop's own output still has the shape that mapping expects: its
 per-file nesting, its ``cop_name``/``location`` field names, and its exit codes.
 A RuboCop upgrade that renames any of them fails here rather than silently
 producing an empty run.
 
 Every case writes its own ``.rubocop.yml`` with ``DisabledByDefault: true`` and
-names the cops it is about. That is not the sensor being narrowed — the sensor
+names the cops it is about. That is not the sensor being narrowed. The sensor
 passes no ``--only`` and forwards whatever fires. It is the *project* deciding,
 which is the arrangement under test, and it keeps the assertions about one cop
 instead of about RuboCop's several-hundred-cop default set.
@@ -76,7 +76,7 @@ def test_real_offenses_reach_their_canonical_smells(tmp_path: Path, rubocop: str
 
 
 def test_a_syntax_error_is_a_parse_error(tmp_path: Path, rubocop: str) -> None:
-    """`Lint/Syntax` is reported whatever the config enables — RuboCop cannot
+    """`Lint/Syntax` is reported whatever the config enables. RuboCop cannot
     run a cop over source it could not parse, so it says so instead. That makes
     unparseable Ruby a *finding*, not a crashed sensor."""
     _configure(tmp_path, "Metrics/ParameterLists")
