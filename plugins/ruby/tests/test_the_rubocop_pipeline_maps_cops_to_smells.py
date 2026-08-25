@@ -100,7 +100,7 @@ def test_an_unmapped_cop_is_forwarded_under_its_own_name() -> None:
 def test_a_cop_named_like_an_object_attribute_is_still_forwarded() -> None:
     """`.get` with a default, never a bare lookup or a truthiness test. The cop
     name comes from RuboCop and nothing constrains it to the table (#83)."""
-    assert smell_of("Metrics/AbcSize") == "Metrics/AbcSize"
+    assert smell_of("Metrics/ClassLength") == "Metrics/ClassLength"
     assert smell_of("") == ""
 
 

@@ -27,14 +27,21 @@ The smell key is the cop name verbatim, `Style/StringLiterals`. Nothing downstre
 guide lookup misses, the finding renders through `uncoached.md`, and the root
 `uncoached` key (default `suggest`) decides whether it fails the run.
 
-Four cops are unmapped **on purpose** rather than by omission, so do not "fix"
-them by adding rows — for two unrelated reasons. `Metrics/AbcSize` and
-`Metrics/PerceivedComplexity` are redundant with `Metrics/CyclomaticComplexity`:
-all three measure a method's complexity, so mapping all three would report one
-method three times over. `Metrics/ClassLength` and `Metrics/ModuleLength` are
-the wrong shape rather than a duplicate: they measure a class or module, never
-a file, so neither can back a file-scoped smell. `oversized-file` comes from
-the generic plugin's line counter instead, as it does for Python and PHP.
+Two cops are unmapped **on purpose** rather than by omission, so do not "fix"
+them by adding rows. `Metrics/ClassLength` and `Metrics/ModuleLength` are the
+wrong shape: they measure a class or module, never a file, so neither can back
+a file-scoped smell. `oversized-file` comes from the generic plugin's line
+counter instead, as it does for Python and PHP.
+
+The three complexity cops all map to `high-complexity` (human decision). They
+are correlated but independent — `PerceivedComplexity` weights nesting and
+`AbcSize` counts assignments and calls, so either fires without
+`CyclomaticComplexity` — and an unmapped complexity cop coached a genuinely
+tangled method through `uncoached.md` when the real guide applied verbatim. The
+old objection, one method reported three times over, is dissolved by the
+mapper: this sensor groups every cop that fired on a smell into one finding's
+issue list, which is never deduped (issue #140), so a method tripping two cops
+keeps both measurements inside a single coaching block.
 
 ## Gotchas
 

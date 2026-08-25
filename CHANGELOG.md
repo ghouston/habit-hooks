@@ -10,8 +10,12 @@ coaches your Ruby the way it already coached your Python and TypeScript.
 - **The `ruby` plugin.** `pip install "habit-hooks[ruby]"`, add `"ruby"` to
   `plugins`, and a `rubocop` sensor translates cop names into the same smell
   vocabulary every other plugin speaks: `too-many-parameters`,
-  `oversized-function`, `high-complexity`, `deep-nesting`, `unused-variable`,
-  `swallowed-exception` and `parse-error`.
+  `oversized-function`, `oversized-block`, `high-complexity`, `deep-nesting`,
+  `unused-variable`, `swallowed-exception` and `parse-error`. All three Metrics
+  complexity cops —
+  `CyclomaticComplexity`, `PerceivedComplexity` and `AbcSize` — coach as
+  `high-complexity`, since a nesting-heavy or call-heavy method can trip one
+  without the others.
 
   Your `.rubocop.yml` decides everything. The sensor passes no `--only` and no
   `--config`, so RuboCop discovers your config by its own upward walk and your
