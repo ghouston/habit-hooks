@@ -5,10 +5,10 @@ description: "Cut a new release of the habit-hooks packages. Use when asked to r
 
 # Release Habit Hooks
 
-Six packages ship from this repo: `habit-hooks` (core), `habit-hooks-generic`,
+Seven packages ship from this repo: `habit-hooks` (core), `habit-hooks-generic`,
 `habit-hooks-python`, `habit-hooks-typescript`, `habit-hooks-php`,
-`habit-hooks-java`. A `v*` tag
-triggers `.github/workflows/release.yml`, which builds all six and publishes
+`habit-hooks-java`, `habit-hooks-ruby`. A `v*` tag
+triggers `.github/workflows/release.yml`, which builds all seven and publishes
 each with `skip-existing: true` — so an unchanged package at an already-published
 version is simply skipped. Publishing is irreversible: **never tag or push
 without Ivett's explicit go-ahead.**

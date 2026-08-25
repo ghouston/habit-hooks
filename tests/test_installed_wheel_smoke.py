@@ -25,7 +25,7 @@ from wheelhouse import build_wheels, install_by_name, installed_packages
 
 # A plugin no wheel in this repo provides, so "you configured a plugin that is
 # not there" keeps meaning that however many plugins we ship.
-UNSHIPPED_PLUGIN = "ruby"
+UNSHIPPED_PLUGIN = "cobol"
 
 
 @pytest.fixture(scope="module")

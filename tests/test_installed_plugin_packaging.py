@@ -22,10 +22,12 @@ from installed_projects import (
     JAVA_SOURCE,
     PHP_SOURCE,
     PYTHON_SOURCE,
+    RUBY_SOURCE,
     TYPESCRIPT_SOURCE,
     java_project,
     php_project,
     python_project,
+    ruby_project,
     typescript_project,
 )
 
@@ -100,6 +102,27 @@ def test_installed_typescript_plugin_resolves_ts_morph_from_the_project(
     assert issue["key"] == TYPESCRIPT_SOURCE
     assert issue["details"]["file"] == TYPESCRIPT_SOURCE
     assert issue["details"]["source"] == "comment:non-essential"
+
+
+def test_installed_ruby_plugin_runs_its_rubocop_pipeline(
+    installed_habit_sensors: Path, tmp_path: Path
+) -> None:
+    """The rubocop sensor runs a Python helper beside its spec, and packaging can
+    lose either of the two. It ships no config of its own, so what an installed
+    run has to carry is the pair — and a lost sensor is a smell nobody is ever
+    told about."""
+    require_tool("rubocop")
+    project = ruby_project(tmp_path)
+
+    findings = run_and_collect_findings(installed_habit_sensors, project)
+
+    by_smell = {finding["smell"]: finding for finding in findings}
+    assert by_smell.keys() == {"too-many-parameters", "unused-variable"}
+    for finding in findings:
+        assert finding["language"] == "ruby"
+        issue = finding["issues"][0]
+        assert Path(issue["key"]).name == RUBY_SOURCE
+        assert issue["details"]["source"].startswith("rubocop:")
 
 
 def test_installed_python_plugin_runs_its_ruff_pipeline(

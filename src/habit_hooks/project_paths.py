@@ -70,10 +70,27 @@ def tool_search_path(project_dir: Path) -> str:
     A project's own installs come first so a run measures with the versions it
     pinned rather than whatever is on the machine — and so an editor plugin and
     a hook, run under different shells, still measure alike.
+
+    ``bin`` is bundler's half of that, and it is not optional the way the other
+    two nearly are. A tool installed beside a project usually only *differs* in
+    version from the machine's; a rubocop run outside the project's bundle
+    cannot read the project's config at all. ``.rubocop.yml`` names its
+    extension gems (``rubocop-rails``, ``rubocop-rspec``), and a rubocop that
+    cannot load one answers ``Error: `Rails/*` has been extracted to the
+    rubocop-rails gem`` and exits — a crashed sensor, for a config that is
+    perfectly good. ``bundle binstubs`` writes those binstubs here, and Rails
+    scaffolds the directory, so it is where a Ruby project keeps the tools it
+    pinned. It goes last of the three because it is the least specific name:
+    ``node_modules/.bin`` and ``.venv/bin`` can hold nothing else, where a
+    ``bin`` may hold a project's own scripts, and a script named after a tool
+    should not outrank a real install beside it.
     """
     node = project_dir / "node_modules" / ".bin"
     venv = venv_bin_dir(project_dir / ".venv")
-    return os.pathsep.join([str(node), str(venv), os.environ.get("PATH", "")])
+    binstubs = project_dir / "bin"
+    return os.pathsep.join(
+        [str(node), str(venv), str(binstubs), os.environ.get("PATH", "")]
+    )
 
 
 def tool_executable(name: str, project_dir: Path) -> str | None:

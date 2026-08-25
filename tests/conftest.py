@@ -41,6 +41,7 @@ SHIPPED_PACKAGES = (
     "habit-hooks-java",
     "habit-hooks-php",
     "habit-hooks-python",
+    "habit-hooks-ruby",
     "habit-hooks-typescript",
 )
 

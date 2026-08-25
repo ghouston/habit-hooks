@@ -1,5 +1,43 @@
 # Changelog
 
+## Unreleased
+
+Ruby. A `Gemfile` or a `.rubocop.yml` in your project and habit-hooks now
+coaches your Ruby the way it already coached your Python and TypeScript.
+
+### Added
+
+- **The `ruby` plugin.** `pip install "habit-hooks[ruby]"`, add `"ruby"` to
+  `plugins`, and a `rubocop` sensor translates cop names into the same smell
+  vocabulary every other plugin speaks: `too-many-parameters`,
+  `oversized-function`, `high-complexity`, `deep-nesting`, `unused-variable`,
+  `swallowed-exception` and `parse-error`.
+
+  Your `.rubocop.yml` decides everything. The sensor passes no `--only` and no
+  `--config`, so RuboCop discovers your config by its own upward walk and your
+  habit-hooks run is the run you get from RuboCop directly. A cop this plugin
+  has no smell for is forwarded under its own name rather than dropped, because
+  a cop only fires if your config switched it on. `--force-exclusion` is the one
+  flag the sensor adds, so `AllCops: Exclude:` keeps applying once habit-hooks
+  names files on the command line.
+
+- **`bin/` joins the tool search path**, after `node_modules/.bin` and
+  `.venv/bin`. It is where `bundle binstubs` writes binstubs, and for Ruby that
+  matters more than a version difference usually does: a `.rubocop.yml` naming
+  `rubocop-rails` or `rubocop-rspec` cannot be read at all by a rubocop outside
+  the bundle those gems live in. It ranks last of the three because `bin` is a
+  name a project may keep its own scripts under.
+
+### Fixed
+
+- **A wrapped tool that never started no longer reads as a clean file.** The
+  `rubocop` binstub begins `#!/usr/bin/env ruby`, so pointing it at an
+  interpreter it is not installed into makes it die in `find_spec_for_exe` and
+  exit 1 — the code that otherwise means "I found offences". The sensor judges
+  the report rather than the exit code: RuboCop prints its JSON envelope on
+  every run it completed, so no envelope means no run, and the run fails instead
+  of reporting nothing wrong.
+
 ## 1.4.0rc3
 
 Reported by @imalliaras (#142) and @FrankRaiser (#140, #143). None of them is a

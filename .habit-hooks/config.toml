@@ -27,6 +27,8 @@ files = [
   "plugins/java/tests/**/*.py",
   "plugins/php/src/**/*.py",
   "plugins/php/tests/**/*.py",
+  "plugins/ruby/src/**/*.py",
+  "plugins/ruby/tests/**/*.py",
   "plugins/typescript/src/**/*.py",
   "plugins/typescript/tests/**/*.py",
 ]

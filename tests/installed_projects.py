@@ -30,6 +30,7 @@ TYPESCRIPT_SOURCE = "src/helper.ts"
 PYTHON_SOURCE = "billing.py"
 PHP_SOURCE = "billing.php"
 JAVA_SOURCE = "Billing.java"
+RUBY_SOURCE = "billing.rb"
 
 
 def _project(tmp_path: Path, name: str, config: str) -> Path:
@@ -80,6 +81,33 @@ def php_project(tmp_path: Path) -> Path:
         "    $unused = 1;\n"
         "    return $a + $b + $c + $d + $e + $f + $g + $h + $i + $j + $k;\n"
         "}\n",
+        encoding="utf-8",
+    )
+    return project
+
+
+def ruby_project(tmp_path: Path) -> Path:
+    """A project whose one file rubocop has two things to say about.
+
+    It carries a ``.rubocop.yml``, because rubocop's config is the whole of what
+    decides its answer and a project without one is not the case worth gating.
+    ``TargetRubyVersion`` is pinned so rubocop settles which Ruby to parse as
+    from the config rather than globbing every ancestor directory for a gemspec,
+    which from a temporary directory means climbing out of the project.
+    """
+    project = _project(tmp_path, "ruby-proj", 'plugins = ["ruby"]\n')
+    (project / ".rubocop.yml").write_text(
+        "AllCops:\n"
+        "  DisabledByDefault: true\n"
+        "  TargetRubyVersion: 3.1\n"
+        "Metrics/ParameterLists:\n"
+        "  Enabled: true\n"
+        "Lint/UselessAssignment:\n"
+        "  Enabled: true\n",
+        encoding="utf-8",
+    )
+    (project / RUBY_SOURCE).write_text(
+        "def charge(a, b, c, d, e, f, g)\n  unused = 1\n  a + b + c\nend\n",
         encoding="utf-8",
     )
     return project

@@ -1,0 +1,35 @@
+# Ruby plugin defaults.
+language = "ruby"
+# A project naming no `files` of its own scans what its plugins declare, so this
+# is the first run for anyone `habit-hooks init` set up. Ruby keeps source in
+# files RuboCop already lints without an extension between them — a Rakefile, a
+# Gemfile and a gemspec are Ruby, and a project's own cops apply to them.
+#
+# The exclusions name `*.rb` rather than the whole directory because a plugin's
+# exclusions bind the union of every active plugin's globs, not just its own
+# (docs/config.md, and the comment in the java plugin's config that a bare
+# `!**/build/**` once stopped a python+java project scanning its own
+# `scripts/build/*.py`). `vendor/` is where Bundler puts installed gems and
+# `tmp/` is Rails' scratch directory: Ruby the project did not write. Rails
+# generates `db/schema.rb`, so it is nobody's to fix by hand.
+files = [
+  "**/*.rb",
+  "**/*.rake",
+  "**/Rakefile",
+  "**/Gemfile",
+  "**/*.gemspec",
+  "!**/vendor/**/*.rb",
+  "!**/tmp/**/*.rb",
+  "!**/db/schema.rb",
+]
+sensors = ["rubocop"]
+transformers = []
+
+# The rubocop sensor spawns the rubocop binary directly. `bundle binstubs
+# rubocop` puts the project's own copy at `bin/rubocop`, which
+# `project_paths.tool_search_path` looks along before the machine's — and for a
+# `.rubocop.yml` naming extension gems, the project's copy is the only one that
+# can read it (see this plugin's README).
+detectors = [
+  { name = "rubocop", kind = "command", install = "gem install rubocop" },
+]

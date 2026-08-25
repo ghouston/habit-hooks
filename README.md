@@ -70,7 +70,7 @@ answers "why is this run not reporting anything?".
 Setup is four steps. A run that reports nothing is almost always a skipped one:
 
 1. **Install habit-hooks** — you get the core and the generic, language-agnostic plugin.
-2. **Install the plugin for your language** — python, typescript, php and java ship as separate packages.
+2. **Install the plugin for your language** — python, typescript, php, java and ruby ship as separate packages.
 3. **Enable the plugins** by naming them in `.habit-hooks/config.toml`. Installing one does not switch it on.
 4. **Install the detectors** the plugins you enabled use — `jscpd`, `ruff`, `eslint` and friends.
 
@@ -95,7 +95,7 @@ You get **core plus the generic plugin**, and four commands on your `PATH`: `hab
 `habit-mapper`, `habit-snooze`. Homebrew is the exception — it installs all five plugins, so skip to step 3.
 
 > ⚠️ **On its own this checks nothing about your language.** The generic plugin measures file length and
-> duplication. Python, TypeScript, PHP and Java each need their own plugin — installed (step 2) *and*
+> duplication. Python, TypeScript, PHP, Java and Ruby each need their own plugin — installed (step 2) *and*
 > enabled (step 3).
 
 ### 2. Install the plugin for your language
@@ -146,6 +146,7 @@ Detectors are **not** bundled: a plugin spawns the real tool, or reads it as a l
 | **typescript** | `node`, [`eslint`](https://eslint.org/), [`knip`](https://knip.dev/), [`ts-morph`](https://ts-morph.com/) | `npm install --save-dev eslint knip ts-morph` (`node` from your system package manager) |
 | **php** | `php` — [phpmd](https://phpmd.org/) ships bundled as a phar | nothing beyond a PHP runtime |
 | **java** | [`pmd`](https://pmd.github.io/) | `brew install pmd` |
+| **ruby** | [`rubocop`](https://rubocop.org/) | `gem install rubocop` (or `bundle binstubs rubocop`) |
 
 `ts-morph` is read as a library rather than spawned, so it belongs in your `devDependencies` — being on `PATH`
 does nothing for it.
@@ -155,8 +156,13 @@ does nothing for it.
 > `npm install --save-dev @typescript-eslint/parser @typescript-eslint/eslint-plugin`. A project with its own
 > `eslint.config.js` needs neither — yours always wins.
 
-`habit-sensors` prepends `node_modules/.bin` and `.venv/bin` to `PATH`, so a project's local tools are found
-without being installed globally.
+> If your Ruby project's `Gemfile` pins rubocop, or its `.rubocop.yml` names an extension gem
+> (`rubocop-rails`, `rubocop-rspec`), run `bundle binstubs rubocop`. habit-hooks looks in `bin/` first, so
+> `bin/rubocop` runs under your bundle with those gems loaded. A rubocop that cannot load a gem your config
+> names fails outright rather than linting, and habit-hooks reports that as a failed run.
+
+`habit-sensors` prepends `node_modules/.bin`, `.venv/bin` and `bin` to `PATH`, so a project's local tools are
+found without being installed globally.
 
 </details>
 
@@ -330,6 +336,7 @@ The five that ship:
 | `typescript` | `typescript` | `eslint`, `knip`, `comment` | eslint, knip, ts-morph |
 | `php` | `php` | `phpmd` | phpmd |
 | `java` | `java` | `pmd` | pmd |
+| `ruby` | `ruby` | `rubocop` | rubocop |
 
 A project turns plugins on by listing them in `.habit-hooks/config.toml`. **That list is ordered, and the
 order is a priority:**
