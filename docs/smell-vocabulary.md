@@ -30,6 +30,7 @@ exits 0. The mapper config can override it per project.
 | `high-complexity`           | High cyclomatic complexity            | enforced         |
 | `deep-nesting`              | Deep nesting                          | enforced         |
 | `oversized-file`            | Oversized file                        | enforced         |
+| `oversized-block`           | Oversized block                       | enforced         |
 | `unused-variable`           | Unused variable                       | enforced         |
 | `loose-equality`            | Loose equality                        | enforced         |
 | `var-declaration`           | `var` declaration                     | enforced         |
@@ -187,7 +188,10 @@ catalogue is shared, only the plugin's sensors differ).
 |----------------------------------|-----------------------|
 | `rubocop:Metrics/ParameterLists`        | `too-many-parameters` |
 | `rubocop:Metrics/MethodLength`          | `oversized-function`  |
+| `rubocop:Metrics/BlockLength`           | `oversized-block`     |
 | `rubocop:Metrics/CyclomaticComplexity`  | `high-complexity`     |
+| `rubocop:Metrics/PerceivedComplexity`   | `high-complexity`     |
+| `rubocop:Metrics/AbcSize`               | `high-complexity`     |
 | `rubocop:Metrics/BlockNesting`          | `deep-nesting`        |
 | `rubocop:Lint/UselessAssignment`        | `unused-variable`     |
 | `rubocop:Lint/SuppressedException`      | `swallowed-exception` |
@@ -208,19 +212,21 @@ that file by its own upward walk. The one flag the sensor adds is
 `--force-exclusion`, which keeps `AllCops: Exclude:` applying once habit-hooks
 names files on the command line.
 
-Four cops are deliberately left unmapped and therefore forwarded, for two
-unrelated reasons.
+Two cops are deliberately left unmapped and therefore forwarded.
 
-`Metrics/AbcSize` and `Metrics/PerceivedComplexity` are redundant with
-`Metrics/CyclomaticComplexity`: all three measure a method's complexity, so
-mapping all three would report one method three times over, the same call the
-java plugin makes about PMD's `NPathComplexity`.
-
-`Metrics/ClassLength` and `Metrics/ModuleLength` are the wrong shape, not a
-duplicate: they measure a class or module, never a file, so neither can back a
-file-scoped smell. `oversized-file` comes from the generic plugin's line-count
-sensor instead, as it does for Python and PHP — add `generic` to the project's
+`Metrics/ClassLength` and `Metrics/ModuleLength` are the wrong shape: they
+measure a class or module, never a file, so neither can back a file-scoped
+smell. `oversized-file` comes from the generic plugin's line-count sensor
+instead, as it does for Python and PHP — add `generic` to the project's
 `plugins` list alongside `ruby` to get it.
+
+The three Metrics complexity cops share `high-complexity`: they are correlated
+but independent (`PerceivedComplexity` weights nesting, `AbcSize` counts
+assignments and calls), and either can fire without `CyclomaticComplexity`.
+A method tripping two of them lands in the sensor's one `high-complexity`
+finding, whose issue list is never deduped — the mapper merges across findings,
+never within one (#140) — so both measurements survive inside a single coaching
+block rather than printing the guide twice.
 
 ## Uncoached smells
 

@@ -61,7 +61,10 @@ Cops this plugin has a canonical smell for are reported under it:
 |-----|-------|
 | `Metrics/ParameterLists` | `too-many-parameters` |
 | `Metrics/MethodLength` | `oversized-function` |
+| `Metrics/BlockLength` | `oversized-block` |
 | `Metrics/CyclomaticComplexity` | `high-complexity` |
+| `Metrics/PerceivedComplexity` | `high-complexity` |
+| `Metrics/AbcSize` | `high-complexity` |
 | `Metrics/BlockNesting` | `deep-nesting` |
 | `Lint/UselessAssignment` | `unused-variable` |
 | `Lint/SuppressedException` | `swallowed-exception` |

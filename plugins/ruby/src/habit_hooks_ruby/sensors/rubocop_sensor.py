@@ -20,14 +20,20 @@ eslint forwarding ``@typescript-eslint/no-explicit-any``. Nothing downstream
 breaks on one. An uncatalogued smell renders through ``uncoached.md``, and the
 root ``uncoached`` key (default ``suggest``) decides whether it fails the run.
 
-Four cops are deliberately unmapped and forwarded like anything else, for two
-unrelated reasons. ``Metrics/AbcSize`` and ``Metrics/PerceivedComplexity`` are
-redundant with ``Metrics/CyclomaticComplexity``, so mapping all three would
-report one method three times over (the call PMD's ``NPathComplexity`` gets in
-the java plugin). ``Metrics/ClassLength`` and ``Metrics/ModuleLength`` are the
-wrong shape rather than a duplicate: they measure a class, not a file, so
-``oversized-file`` comes from the generic ``line-count`` sensor instead, as it
-does for python and php.
+``Metrics/ClassLength`` and ``Metrics/ModuleLength`` are the two cops
+deliberately unmapped and forwarded like anything else. They are the wrong
+shape, not a duplicate: they measure a class or module, never a file, so
+neither can back a file-scoped smell, and ``oversized-file`` comes from the
+generic ``line-count`` sensor instead, as it does for python and php.
+
+The three complexity cops share one smell on purpose. They are correlated but
+independent. A method tripping two cops keeps both measurements inside a single coaching
+block.
+
+``Metrics/BlockLength`` maps to its own smell rather than to
+``oversized-function``: a block is an anonymous function the project never
+named, and its coaching (name the work as a method, let the declaration point
+at it) differs enough from a method's to warrant the ruby plugin's own guide.
 
 The plugin ships no RuboCop of its own, so the sensor names ``${detector:rubocop}``
 and its ``sys.argv[1]`` is the file this project runs for it, and the scoped
@@ -45,7 +51,10 @@ import sys
 COP_SMELLS = {
     "Metrics/ParameterLists": "too-many-parameters",
     "Metrics/MethodLength": "oversized-function",
+    "Metrics/BlockLength": "oversized-block",
     "Metrics/CyclomaticComplexity": "high-complexity",
+    "Metrics/PerceivedComplexity": "high-complexity",
+    "Metrics/AbcSize": "high-complexity",
     "Metrics/BlockNesting": "deep-nesting",
     "Lint/UselessAssignment": "unused-variable",
     "Lint/SuppressedException": "swallowed-exception",
