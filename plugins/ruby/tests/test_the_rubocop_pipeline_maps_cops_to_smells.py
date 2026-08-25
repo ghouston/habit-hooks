@@ -28,7 +28,7 @@ def _entry(cop: str, file: str = "app/billing.rb", **kwargs) -> dict:
 
 
 def test_no_offenses_is_an_empty_findings_array() -> None:
-    """A clean run prints `[]`, never nothing — the sensor contract."""
+    """A clean run prints `[]`, never nothing. That is the sensor contract."""
     assert findings([]) == []
 
 
@@ -68,7 +68,7 @@ def test_every_mapped_cop_reaches_its_smell(cop: str) -> None:
 
 
 def test_findings_are_grouped_by_smell_and_sorted() -> None:
-    """One finding per smell whatever order the offences arrive in — the output
+    """One finding per smell whatever order the offences arrive in. The output
     is compared byte for byte by the spec cases, so it has to be deterministic."""
     grouped = findings(
         [

@@ -3,7 +3,7 @@
 **A helper loads as a loose script.** ``sensors/rubocop.toml`` spells
 ``${python} ${dir}/rubocop_sensor.py``, so the interpreter puts the helper's own
 directory first on ``sys.path``, and a unit test does the same rather than
-reaching the code as ``habit_hooks_ruby.sensors.rubocop_sensor`` — a load path
+reaching the code as ``habit_hooks_ruby.sensors.rubocop_sensor``, a load path
 no run ever takes (see "A plugin helper imports its neighbours as top-level
 modules" in CLAUDE.md).
 
@@ -39,5 +39,5 @@ def rubocop() -> str:
     """
     found = shutil.which("rubocop")
     if found is None:
-        pytest.fail("rubocop is not on PATH — 'gem install rubocop'")
+        pytest.fail("rubocop is not on PATH, run 'gem install rubocop'")
     return found

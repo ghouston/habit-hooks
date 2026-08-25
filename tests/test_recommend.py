@@ -57,7 +57,7 @@ def test_an_unused_language_is_not_recommended(tmp_path: Path) -> None:
     The file in scope is `.cbl`, because cobol is this suite's standing name
     for a language habit-hooks has no plugin for (`test_initialise`,
     `test_uv_tool_command`, `test_installed_wheel_smoke`). It was `.rb` until
-    the ruby plugin shipped — a file that stops being unrecognised is a case
+    the ruby plugin shipped. A file that stops being unrecognised is a case
     that stops asking its question, and it passes either way while it does.
     """
     assert (
@@ -87,7 +87,7 @@ def test_a_ruby_project_is_recommended_ruby(tmp_path: Path) -> None:
     """A `Gemfile` or a `.rubocop.yml` counts as ruby, as does any `.rb` file.
 
     `.rubocop.yml` is a signal and not just the tool's config because it is the
-    one file that says a project already lints its Ruby — the reader most
+    one file that says a project already lints its Ruby, the reader most
     likely to want this plugin. A gemless script directory is still caught by
     the extension.
     """

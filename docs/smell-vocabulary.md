@@ -208,13 +208,18 @@ that file by its own upward walk. The one flag the sensor adds is
 `--force-exclusion`, which keeps `AllCops: Exclude:` applying once habit-hooks
 names files on the command line.
 
-Three cops are deliberately left unmapped and therefore forwarded.
-`Metrics/AbcSize` and `Metrics/PerceivedComplexity` measure what
-`Metrics/CyclomaticComplexity` already measures, so mapping them would report
-one method three times, the same call the java plugin makes about PMD's
-`NPathComplexity`. `Metrics/ClassLength` and `Metrics/ModuleLength` measure a
-class rather than a file, so `oversized-file` comes from the generic line-count
-sensor instead, as it does for Python and PHP. Add `generic` to the project's
+Four cops are deliberately left unmapped and therefore forwarded, for two
+unrelated reasons.
+
+`Metrics/AbcSize` and `Metrics/PerceivedComplexity` are redundant with
+`Metrics/CyclomaticComplexity`: all three measure a method's complexity, so
+mapping all three would report one method three times over, the same call the
+java plugin makes about PMD's `NPathComplexity`.
+
+`Metrics/ClassLength` and `Metrics/ModuleLength` are the wrong shape, not a
+duplicate: they measure a class or module, never a file, so neither can back a
+file-scoped smell. `oversized-file` comes from the generic plugin's line-count
+sensor instead, as it does for Python and PHP — add `generic` to the project's
 `plugins` list alongside `ruby` to get it.
 
 ## Uncoached smells

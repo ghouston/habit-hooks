@@ -90,7 +90,7 @@ def test_a_projects_binstubs_outrank_the_machine_but_not_its_package_installs(
 
     A rubocop found on the machine rather than in the project's bundle cannot
     load the extension gems its ``.rubocop.yml`` names, so it fails a config
-    that is perfectly good — ``bin`` has to beat ``/usr/bin`` or a Rails
+    that is perfectly good. ``bin`` has to beat ``/usr/bin`` or a Rails
     project's every run is that failure. It ranks *below* the other two because
     ``bin`` is a name a project may keep its own scripts under, where
     ``node_modules/.bin`` and ``.venv/bin`` can hold nothing else.

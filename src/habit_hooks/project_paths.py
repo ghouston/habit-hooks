@@ -77,7 +77,7 @@ def tool_search_path(project_dir: Path) -> str:
     cannot read the project's config at all. ``.rubocop.yml`` names its
     extension gems (``rubocop-rails``, ``rubocop-rspec``), and a rubocop that
     cannot load one answers ``Error: `Rails/*` has been extracted to the
-    rubocop-rails gem`` and exits — a crashed sensor, for a config that is
+    rubocop-rails gem`` and exits. That is a crashed sensor for a config that is
     perfectly good. ``bundle binstubs`` writes those binstubs here, and Rails
     scaffolds the directory, so it is where a Ruby project keeps the tools it
     pinned. It goes last of the three because it is the least specific name:
