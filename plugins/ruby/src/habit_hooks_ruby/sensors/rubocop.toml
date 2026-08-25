@@ -1,0 +1,1 @@
+argv = ["${python}", "${dir}/rubocop_sensor.py", "${detector:rubocop}", "${files}"]

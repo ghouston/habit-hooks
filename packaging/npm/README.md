@@ -20,6 +20,7 @@ plugin. Language plugins are opt-in extras:
 - `habit-hooks[typescript]`
 - `habit-hooks[php]`
 - `habit-hooks[java]`
+- `habit-hooks[ruby]`
 - `habit-hooks[all]`
 
 Project: https://github.com/habit-hooks/habit-hooks

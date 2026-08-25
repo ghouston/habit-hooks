@@ -9,6 +9,7 @@ members = [
     "habit-hooks-java",
     "habit-hooks-php",
     "habit-hooks-python",
+    "habit-hooks-ruby",
     "habit-hooks-typescript",
 ]
 
@@ -88,6 +89,7 @@ all = [
     { name = "habit-hooks-java" },
     { name = "habit-hooks-php" },
     { name = "habit-hooks-python" },
+    { name = "habit-hooks-ruby" },
     { name = "habit-hooks-typescript" },
 ]
 java = [
@@ -98,6 +100,9 @@ php = [
 ]
 python = [
     { name = "habit-hooks-python" },
+]
+ruby = [
+    { name = "habit-hooks-ruby" },
 ]
 typescript = [
     { name = "habit-hooks-typescript" },
@@ -110,6 +115,7 @@ dev = [
     { name = "habit-hooks-java" },
     { name = "habit-hooks-php" },
     { name = "habit-hooks-python" },
+    { name = "habit-hooks-ruby" },
     { name = "habit-hooks-typescript" },
     { name = "markdown-it-py" },
     { name = "packaging" },
@@ -127,12 +133,14 @@ requires-dist = [
     { name = "habit-hooks-php", marker = "extra == 'php'", editable = "plugins/php" },
     { name = "habit-hooks-python", marker = "extra == 'all'", editable = "plugins/python" },
     { name = "habit-hooks-python", marker = "extra == 'python'", editable = "plugins/python" },
+    { name = "habit-hooks-ruby", marker = "extra == 'all'", editable = "plugins/ruby" },
+    { name = "habit-hooks-ruby", marker = "extra == 'ruby'", editable = "plugins/ruby" },
     { name = "habit-hooks-typescript", marker = "extra == 'all'", editable = "plugins/typescript" },
     { name = "habit-hooks-typescript", marker = "extra == 'typescript'", editable = "plugins/typescript" },
     { name = "jinja2", specifier = ">=3" },
     { name = "pathspec", specifier = ">=0.12" },
 ]
-provides-extras = ["python", "typescript", "php", "java", "all"]
+provides-extras = ["python", "typescript", "php", "java", "ruby", "all"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -141,6 +149,7 @@ dev = [
     { name = "habit-hooks-java", editable = "plugins/java" },
     { name = "habit-hooks-php", editable = "plugins/php" },
     { name = "habit-hooks-python", editable = "plugins/python" },
+    { name = "habit-hooks-ruby", editable = "plugins/ruby" },
     { name = "habit-hooks-typescript", editable = "plugins/typescript" },
     { name = "markdown-it-py", specifier = ">=3" },
     { name = "packaging", specifier = ">=24" },
@@ -167,6 +176,11 @@ source = { editable = "plugins/php" }
 name = "habit-hooks-python"
 version = "1.4.0"
 source = { editable = "plugins/python" }
+
+[[package]]
+name = "habit-hooks-ruby"
+version = "1.4.0rc3"
+source = { editable = "plugins/ruby" }
 
 [[package]]
 name = "habit-hooks-typescript"

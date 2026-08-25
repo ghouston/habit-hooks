@@ -71,6 +71,13 @@ jobs:
           }
           Expand-Archive "$env:RUNNER_TEMP\pmd.zip" -DestinationPath "$env:RUNNER_TEMP\pmd"
           "$env:RUNNER_TEMP\pmd\pmd-bin-7.26.0\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+      # The ruby plugin's sensor and its spec cases need the real rubocop. Ruby
+      # itself is preinstalled on both runner images, so the gem is the whole
+      # requirement. The version is pinned for the reason PMD's is: an
+      # unpinned lint tool turns every new cop into a CI failure on a commit
+      # that did not cause it. Bumping it means changing this one line.
+      - name: Install rubocop
+        run: gem install --no-document rubocop -v 1.86.1
       - name: Test
         run: uv run pytest
       # Dogfooding: habit-hooks gates its own source. Without this the tool can

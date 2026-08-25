@@ -52,8 +52,18 @@ def test_an_active_language_is_not_recommended(tmp_path: Path) -> None:
 
 
 def test_an_unused_language_is_not_recommended(tmp_path: Path) -> None:
-    """No `*.py` in scope and no `pyproject.toml`: no signal, no hint."""
-    assert recommendations(tmp_path, ["src/app.rb"], PluginStatus(set(), _on_hand())) == []
+    """No `*.py` in scope and no `pyproject.toml`: no signal, no hint.
+
+    The file in scope is `.cbl`, because cobol is this suite's standing name
+    for a language habit-hooks has no plugin for (`test_initialise`,
+    `test_uv_tool_command`, `test_installed_wheel_smoke`). It was `.rb` until
+    the ruby plugin shipped — a file that stops being unrecognised is a case
+    that stops asking its question, and it passes either way while it does.
+    """
+    assert (
+        recommendations(tmp_path, ["src/app.cbl"], PluginStatus(set(), _on_hand()))
+        == []
+    )
 
 
 def test_a_java_project_is_recommended_java(tmp_path: Path) -> None:
@@ -71,6 +81,28 @@ def test_a_java_project_is_recommended_java(tmp_path: Path) -> None:
     assert recommendations(tmp_path, [], PluginStatus(set(), _on_hand())) != []
     assert recommendations(tmp_path, [], PluginStatus({"java"}, _on_hand("java"))) == []
     assert recommendations(tmp_path, ["src/App.java"], PluginStatus(set(), _on_hand())) != []
+
+
+def test_a_ruby_project_is_recommended_ruby(tmp_path: Path) -> None:
+    """A `Gemfile` or a `.rubocop.yml` counts as ruby, as does any `.rb` file.
+
+    `.rubocop.yml` is a signal and not just the tool's config because it is the
+    one file that says a project already lints its Ruby — the reader most
+    likely to want this plugin. A gemless script directory is still caught by
+    the extension.
+    """
+    (tmp_path / "Gemfile").write_text("source 'https://rubygems.org'\n", encoding="utf-8")
+    assert recommendations(tmp_path, [], PluginStatus(set(), _on_hand())) == [
+        "habit-sensors: detected ruby; "
+        "consider `pip install habit-hooks-ruby`, "
+        'then add "ruby" to `plugins` in .habit-hooks/config.toml'
+    ]
+
+    (tmp_path / "Gemfile").unlink()
+    (tmp_path / ".rubocop.yml").write_text("", encoding="utf-8")
+    assert recommendations(tmp_path, [], PluginStatus(set(), _on_hand())) != []
+    assert recommendations(tmp_path, [], PluginStatus({"ruby"}, _on_hand("ruby"))) == []
+    assert recommendations(tmp_path, ["app/billing.rb"], PluginStatus(set(), _on_hand())) != []
 
 
 def test_a_vendored_plugin_counts_as_installed(tmp_path: Path) -> None:

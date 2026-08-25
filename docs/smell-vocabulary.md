@@ -178,6 +178,45 @@ falls back to the bundled `pmd-ruleset.xml` — a project's own ruleset wins
 ([config.md](config.md)). PMD 7's `UnnecessaryImport` is the renamed
 `UnusedImports`.
 
+## Ruby plugin translation
+
+The cops the Ruby plugin's sensor translates into smell keys (the rest of the
+catalogue is shared, only the plugin's sensors differ).
+
+| Raw key (tool:rule)              | Smell key             |
+|----------------------------------|-----------------------|
+| `rubocop:Metrics/ParameterLists`        | `too-many-parameters` |
+| `rubocop:Metrics/MethodLength`          | `oversized-function`  |
+| `rubocop:Metrics/CyclomaticComplexity`  | `high-complexity`     |
+| `rubocop:Metrics/BlockNesting`          | `deep-nesting`        |
+| `rubocop:Lint/UselessAssignment`        | `unused-variable`     |
+| `rubocop:Lint/SuppressedException`      | `swallowed-exception` |
+| `rubocop:Lint/Syntax`                   | `parse-error`         |
+
+**A cop with no row above is forwarded under its own name, not dropped.** This
+is the second deliberate exception to "a sensor emits vocabulary smells only",
+and it is the eslint one for the same reason. The test is whose vocabulary a key
+belongs to: knip's key set is knip's own, but a cop only fires because the
+project's `.rubocop.yml` switched it on, so forwarding it is forwarding the
+project's own decision. What arrives uncatalogued is then the root `uncoached`
+key's business, which coaches without failing the run unless a project says
+otherwise.
+
+The sensor passes no `--only` and no `--config`. Which cops run, and at what
+thresholds, is what the project's `.rubocop.yml` already says, and RuboCop finds
+that file by its own upward walk. The one flag the sensor adds is
+`--force-exclusion`, which keeps `AllCops: Exclude:` applying once habit-hooks
+names files on the command line.
+
+Three cops are deliberately left unmapped and therefore forwarded.
+`Metrics/AbcSize` and `Metrics/PerceivedComplexity` measure what
+`Metrics/CyclomaticComplexity` already measures, so mapping them would report
+one method three times, the same call the java plugin makes about PMD's
+`NPathComplexity`. `Metrics/ClassLength` and `Metrics/ModuleLength` measure a
+class rather than a file, so `oversized-file` comes from the generic line-count
+sensor instead, as it does for Python and PHP. Add `generic` to the project's
+`plugins` list alongside `ruby` to get it.
+
 ## Uncoached smells
 
 A smell with no entry above still renders — through the generic `uncoached.md`
