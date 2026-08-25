@@ -212,13 +212,13 @@ that file by its own upward walk. The one flag the sensor adds is
 `--force-exclusion`, which keeps `AllCops: Exclude:` applying once habit-hooks
 names files on the command line.
 
-Two cops are deliberately left unmapped and therefore forwarded.
+Two cops are deliberately left uncoached.
 
-`Metrics/ClassLength` and `Metrics/ModuleLength` are the wrong shape: they
-measure a class or module, never a file, so neither can back a file-scoped
-smell. `oversized-file` comes from the generic plugin's line-count sensor
-instead, as it does for Python and PHP — add `generic` to the project's
-`plugins` list alongside `ruby` to get it.
+`Metrics/ClassLength` and `Metrics/ModuleLength` measure a class or module,
+and the vocabulary has no class-scoped smell for them to back. Like every
+unmapped cop they are forwarded under their own names, rendered through the
+generic `uncoached.md` guidance, and `suggest` by default (see
+[Uncoached smells](#uncoached-smells)) until a class and module scoped coach exists.
 
 The three Metrics complexity cops share `high-complexity`: they are correlated
 but independent (`PerceivedComplexity` weights nesting, `AbcSize` counts

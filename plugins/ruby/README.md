@@ -13,7 +13,7 @@ pip install "habit-hooks[ruby]"
 
 ```toml
 # .habit-hooks/config.toml
-plugins = ["ruby", "generic"]
+plugins = ["ruby"]
 ```
 
 Installing a plugin does not switch it on — it has to be named in
@@ -75,9 +75,19 @@ get to see it. It coaches without failing the run; set the root `uncoached` key
 to `ignore` to drop them, or `enforce` to fail on them
 ([config.md](https://github.com/habit-hooks/habit-hooks/blob/main/docs/config.md)).
 
-`oversized-file` has no rubocop cop behind it (`Metrics/ClassLength` measures a
-class, not a file), so it comes from the `generic` plugin's line counter — which
-is one reason to keep `generic` in your `plugins` list.
+## Findings the `generic` plugin adds
+
+`habit-hooks init` writes `generic` into your `plugins` list alongside `ruby`,
+so a generated setup also coaches two smells this plugin has no part in:
+
+Drop `generic` from `plugins` if you would rather not see either.
+
+- **`oversized-file`** — from generic's built-in line counter. Nothing to
+  install or configure.
+- **`duplicated-code`** — from generic's jscpd sensor. This one needs setup:
+  jscpd itself (`npm install --save-dev jscpd`) and a `.jscpd.json` of your
+  own, because its bundled config scans `src/` — a directory a Ruby project
+  usually doesn't have.
 
 ### A starting `.rubocop.yml`
 
