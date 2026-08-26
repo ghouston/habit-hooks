@@ -6,4 +6,4 @@ Avoid mechanical extraction. Splitting one block into `apply_part_one` / `apply_
 
 A concrete technique: write what the block does in one short sentence and refactor until the code reads as close to it as possible. If you cannot say what it does in one sentence, it almost certainly does more than one thing.
 
-{% include "includes/line_level_issues.md" %}
+{% include "includes/rubocop_line_level_issues.md" %}

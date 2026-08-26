@@ -8,4 +8,4 @@ Useful tip: ask "if this fires at 3am, will anyone know it happened, and know wh
 
 **AVOID**: narrowing the type or adding a suppression comment just to quiet the checker while the error is still discarded.
 
-{% include "includes/line_level_issues.md" %}
+{% include "includes/rubocop_line_level_issues.md" %}
