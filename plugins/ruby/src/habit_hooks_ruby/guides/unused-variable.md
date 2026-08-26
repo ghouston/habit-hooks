@@ -5,4 +5,4 @@ An unused local variable is dead weight. It usually signals one of three things:
 
 Decide which it is before fixing or deleting. If the right-hand side has side effects you still need, keep the call but drop the binding. If it was meant to be returned or passed on, finish that thread rather than silencing the warning.
 
-{% include "includes/line_level_issues.md" %}
+{% include "includes/rubocop_line_level_issues.md" %}
