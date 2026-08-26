@@ -104,6 +104,29 @@ def test_a_cop_named_like_an_object_attribute_is_still_forwarded() -> None:
     assert smell_of("") == ""
 
 
+def test_a_correctable_offence_carries_rubocops_own_tag_in_source() -> None:
+    """`correctable` rides in `source`, spelled as RuboCop spells it, so the
+    listing can show it without a field only this sensor would emit. RuboCop's
+    JSON carries no safety flag, so `[Correctable]` means an autocorrect exists,
+    not that it is safe."""
+    entry = _entry("Lint/UselessAssignment")
+    entry["offense"]["correctable"] = True
+
+    [finding] = findings([entry])
+
+    assert (
+        finding["issues"][0]["details"]["source"]
+        == "rubocop:Lint/UselessAssignment [Correctable]"
+    )
+
+
+def test_an_offence_without_the_flag_is_untagged() -> None:
+    """`correctable` absent or false is the same answer: no tag."""
+    [finding] = findings([_entry("Metrics/MethodLength")])
+
+    assert finding["issues"][0]["details"]["source"] == "rubocop:Metrics/MethodLength"
+
+
 def test_a_report_inspecting_nothing_is_no_offenses() -> None:
     """RuboCop still prints its envelope when every file was excluded."""
     assert offenses({"files": []}) == []
