@@ -71,7 +71,7 @@ def test_real_offenses_reach_their_canonical_smells(tmp_path: Path, rubocop: str
     }
     assert {finding["issues"][0]["details"]["source"] for finding in found} == {
         "rubocop:Metrics/ParameterLists",
-        "rubocop:Lint/UselessAssignment",
+        "rubocop:Lint/UselessAssignment [Correctable]",
     }
 
 
