@@ -29,8 +29,12 @@ app/services/billing.rb:14 rubocop:Metrics/AbcSize
 ## Install
 
 ```sh
-pip install "habit-hooks[ruby]"
+uv tool install "habit-hooks[ruby]"   # pip and pipx work too
 ```
+
+Or let setup do it: with habit-hooks already installed, `habit-hooks init` in your
+project detects ruby, names this plugin in `.habit-hooks/config.toml`, and offers to
+run the install for you — see the [root README](https://github.com/habit-hooks/habit-hooks#install).
 
 ## Enable
 
