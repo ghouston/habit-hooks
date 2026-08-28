@@ -5,10 +5,13 @@ language = "ruby"
 # files RuboCop already lints without an extension between them — a Rakefile, a
 # Gemfile and a gemspec are Ruby, and a project's own cops apply to them.
 #
-# The exclusions name `*.rb` rather than the whole directory because a plugin's
-# exclusions bind the union of every active plugin's globs, not just its own
-# (docs/config.md, and the comment in the java plugin's config that a bare
-# `!**/build/**` once stopped a python+java project scanning its own
+# The exclusions name Ruby's own source shapes one by one — every included
+# shape needs its own negative, or it leaks back in: an installed gem ships
+# its own `Rakefile` and `.gemspec`, and Rails' scratch directory copies
+# whatever it scratches. They still never name the whole directory, because a
+# plugin's exclusions bind the union of every active plugin's globs, not just
+# its own (docs/config.md, and the comment in the java plugin's config that a
+# bare `!**/build/**` once stopped a python+java project scanning its own
 # `scripts/build/*.py`). `vendor/` is where Bundler puts installed gems and
 # `tmp/` is Rails' scratch directory: Ruby the project did not write. Rails
 # generates `db/schema.rb`, so it is nobody's to fix by hand.
@@ -19,7 +22,15 @@ files = [
   "**/Gemfile",
   "**/*.gemspec",
   "!**/vendor/**/*.rb",
+  "!**/vendor/**/*.rake",
+  "!**/vendor/**/Rakefile",
+  "!**/vendor/**/Gemfile",
+  "!**/vendor/**/*.gemspec",
   "!**/tmp/**/*.rb",
+  "!**/tmp/**/*.rake",
+  "!**/tmp/**/Rakefile",
+  "!**/tmp/**/Gemfile",
+  "!**/tmp/**/*.gemspec",
   "!**/db/schema.rb",
 ]
 sensors = ["rubocop"]
