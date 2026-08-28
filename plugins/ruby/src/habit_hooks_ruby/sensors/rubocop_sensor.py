@@ -1,8 +1,5 @@
 """Run RuboCop and print canonical findings, mapped from cop name to smell.
 
-RuboCop's own JSON nests offences under each file; this flattens them, groups by
-smell and shapes each into the canonical finding.
-
 **Which cops run is the project's business, not ours.** The sensor passes no
 ``--only`` and no ``--config``. RuboCop finds ``.rubocop.yml`` by walking up from
 each inspected file, exactly as it does when run by hand, so a project's habit-
@@ -10,30 +7,10 @@ hooks run is the run it gets from the tool directly. ``--force-exclusion`` is th
 one flag that keeps that true. Without it, naming files on the command line
 overrides the project's own ``AllCops: Exclude:``.
 
-**An unmapped cop is forwarded, not dropped**, which is the opposite of the knip
-sensor and the same as the eslint one. CLAUDE.md's test for a wrapped tool is
-"whose vocabulary is it?" Knip's key set is knip's own, but a cop that fired is
-one the project's ``.rubocop.yml`` turned on, so forwarding it saves running
-RuboCop separately. Its smell key is the cop name verbatim
-(``Style/StringLiterals``). A ``/`` in a smell key is already precedented by
-eslint forwarding ``@typescript-eslint/no-explicit-any``. Nothing downstream
-breaks on one. An uncatalogued smell renders through ``uncoached.md``, and the
-root ``uncoached`` key (default ``suggest``) decides whether it fails the run.
-
-``Metrics/ClassLength`` and ``Metrics/ModuleLength`` are the two cops
-deliberately left uncoached: they measure a class or module, and the vocabulary
-has no class-scoped smell for them to back. Like every unmapped cop they are
-forwarded under their own names and rendered through ``uncoached.md``,
-``suggest`` until a class and module scoped coach exists.
-
-The three complexity cops share one smell on purpose. They are correlated but
-independent. A method tripping two cops keeps both measurements inside a single coaching
-block.
-
-``Metrics/BlockLength`` maps to its own smell rather than to
-``oversized-function``: a block is an anonymous function the project never
-named, and its coaching (name the work as a method, let the declaration point
-at it) differs enough from a method's to warrant the ruby plugin's own guide.
+Parsing and shaping live next door in ``rubocop_report``, a neighbour imported
+as a top-level module because a helper runs as a loose script — the interpreter
+puts the helper's own directory first on ``sys.path`` (CLAUDE.md, "A plugin
+helper imports its neighbours as top-level modules").
 
 The plugin ships no RuboCop of its own, so the sensor names ``${detector:rubocop}``
 and its ``sys.argv[1]`` is the file this project runs for it, and the scoped
@@ -48,18 +25,7 @@ import json
 import subprocess
 import sys
 
-COP_SMELLS = {
-    "Metrics/ParameterLists": "too-many-parameters",
-    "Metrics/MethodLength": "oversized-function",
-    "Metrics/BlockLength": "oversized-block",
-    "Metrics/CyclomaticComplexity": "high-complexity",
-    "Metrics/PerceivedComplexity": "high-complexity",
-    "Metrics/AbcSize": "high-complexity",
-    "Metrics/BlockNesting": "deep-nesting",
-    "Lint/UselessAssignment": "unused-variable",
-    "Lint/SuppressedException": "swallowed-exception",
-    "Lint/Syntax": "parse-error",
-}
+from rubocop_report import findings, offenses, report
 
 # RuboCop's own contract: 0 is clean, 1 is "offences found". Anything else
 # means RuboCop never produced a real report, the same distinction
@@ -101,22 +67,6 @@ def run_rubocop(rubocop: str, files: list[str]) -> subprocess.CompletedProcess[s
     )
 
 
-def report(result: subprocess.CompletedProcess[str]) -> dict | None:
-    """RuboCop's JSON report, or ``None`` where it produced none.
-
-    ``files`` has to be there, not merely valid JSON. That key is what makes it
-    a report rather than something else that happens to parse.
-    """
-    text = result.stdout.strip()
-    if not text:
-        return None
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        return None
-    return parsed if isinstance(parsed, dict) and "files" in parsed else None
-
-
 def rubocop_crashed(
     result: subprocess.CompletedProcess[str], parsed: dict | None
 ) -> bool:
@@ -133,64 +83,6 @@ def rubocop_crashed(
     free to drift from the one the tests exercise.
     """
     return result.returncode not in TOOL_EXIT_CODES or parsed is None
-
-
-def offenses(parsed: dict) -> list[dict]:
-    """RuboCop's per-file nesting flattened, each offence carrying its path."""
-    return [
-        {"file": entry["path"], "offense": offense}
-        for entry in parsed.get("files", [])
-        for offense in entry["offenses"]
-    ]
-
-
-def smell_of(cop_name: str) -> str:
-    """This plugin's smell for a cop, or the cop itself where it has none.
-
-    ``.get`` with the cop as its own default, never a bare lookup. The string
-    comes from RuboCop and nothing constrains it to the table above (issue #83).
-    """
-    return COP_SMELLS.get(cop_name, cop_name)
-
-
-def issue(entry: dict) -> dict:
-    offense = entry["offense"]
-    return {
-        "key": entry["file"],
-        "details": {
-            "file": entry["file"],
-            "line": offense["location"]["line"],
-            "column": offense["location"]["column"],
-            "message": offense["message"],
-            "source": source_of(offense),
-        },
-    }
-
-
-def source_of(offense: dict) -> str:
-    """Provenance, with RuboCop's own autocorrect flag when it offers one.
-
-    ``correctable`` means an autocorrect exists, not that it is safe — RuboCop's
-    JSON does not carry the per-cop ``SafeAutoCorrect`` attribute. Spelled
-    ``[Correctable]`` exactly as RuboCop's own output spells it, so the tag sets
-    the same expectation the tool does.
-    """
-    source = "rubocop:" + offense["cop_name"]
-    return source + " [Correctable]" if offense.get("correctable") else source
-
-
-def findings(entries: list[dict]) -> list[dict]:
-    by_smell: dict[str, list[dict]] = {}
-    for entry in entries:
-        by_smell.setdefault(smell_of(entry["offense"]["cop_name"]), []).append(entry)
-    return [
-        {
-            "smell": smell,
-            "details": {},
-            "issues": [issue(entry) for entry in by_smell[smell]],
-        }
-        for smell in sorted(by_smell)
-    ]
 
 
 def main() -> int:

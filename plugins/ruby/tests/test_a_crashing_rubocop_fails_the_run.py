@@ -20,7 +20,8 @@ import sys
 from pathlib import Path
 
 import pytest
-from rubocop_sensor import report, rubocop_crashed
+from rubocop_report import report
+from rubocop_sensor import rubocop_crashed
 
 
 def _crashed(result: subprocess.CompletedProcess[str]) -> bool:
