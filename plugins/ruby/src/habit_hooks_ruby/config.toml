@@ -37,10 +37,11 @@ sensors = ["rubocop"]
 transformers = []
 
 # The rubocop sensor spawns the rubocop binary directly. `bundle binstubs
-# rubocop` puts the project's own copy at `bin/rubocop`, which
-# `project_paths.tool_search_path` looks along before the machine's — and for a
+# rubocop` puts the project's own copy at `bin/rubocop`, and for a
 # `.rubocop.yml` naming extension gems, the project's copy is the only one that
-# can read it (see this plugin's README).
+# can read it (see this plugin's README). `bin` is not on the default search
+# path — a project may keep its own scripts under a name like that — so the
+# detector names it, and only the lookups for rubocop search it.
 detectors = [
-  { name = "rubocop", kind = "command", install = "gem install rubocop" },
+  { name = "rubocop", kind = "command", install = "gem install rubocop", search_paths = ["bin"] },
 ]

@@ -77,33 +77,24 @@ def test_the_project_s_own_tool_bins_come_first_on_its_search_path(
     assert tool_search_path(tmp_path).split(os.pathsep) == [
         str(tmp_path / "node_modules" / ".bin"),
         str(tmp_path / ".venv" / "bin"),
-        str(tmp_path / "bin"),
         "/usr/bin",
     ]
 
 
-def test_a_projects_binstubs_outrank_the_machine_but_not_its_package_installs(
+def test_the_project_s_bin_is_searched_only_where_a_detector_names_it(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``bin`` is bundler's answer to ``node_modules/.bin``, and the order is
-    the point of it.
-
-    A rubocop found on the machine rather than in the project's bundle cannot
-    load the extension gems its ``.rubocop.yml`` names, so it fails a config
-    that is perfectly good. ``bin`` has to beat ``/usr/bin`` or a Rails
-    project's every run is that failure. It ranks *below* the other two because
-    ``bin`` is a name a project may keep its own scripts under, where
-    ``node_modules/.bin`` and ``.venv/bin`` can hold nothing else.
+    """``bin`` is bundler's answer to ``node_modules/.bin``, but it is also a
+    directory a project may keep its own scripts under — where those two can
+    hold nothing else — so a script named after a tool there would outrank a
+    real install beside it. The plugin whose tools live there names the
+    directory on its detector instead
+    (``detectors.search_paths``), and only the lookups that ask for that tool
+    search it.
     """
     monkeypatch.setenv("PATH", "/usr/bin")
-    off_windows(monkeypatch)
 
-    entries = tool_search_path(tmp_path).split(os.pathsep)
-
-    assert entries.index(str(tmp_path / "bin")) < entries.index("/usr/bin")
-    assert entries.index(str(tmp_path / ".venv" / "bin")) < entries.index(
-        str(tmp_path / "bin")
-    )
+    assert str(tmp_path / "bin") not in tool_search_path(tmp_path).split(os.pathsep)
 
 
 def test_a_venv_keeps_its_executables_under_bin(

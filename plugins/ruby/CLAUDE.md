@@ -134,16 +134,23 @@ Error: `Rails/*` has been extracted to the `rubocop-rails` gem.
 Nearly every Rails repo pins rubocop plus `rubocop-rails` / `rubocop-rspec` /
 `rubocop-performance` in its `Gemfile`, and those gems load only under the
 project's own bundle. This is the likeliest way the sensor fails in practice,
-and it is why `<project>/bin` was added to `project_paths.tool_search_path`:
-`bundle binstubs rubocop` writes `bin/rubocop`, and habit-hooks looks there
-before the machine's `PATH`.
+and it is why the plugin's rubocop detector declares
+`search_paths = ["bin"]` (`src/habit_hooks/detectors.py`):
+`bundle binstubs rubocop` writes `bin/rubocop`, and every lookup for that
+tool — `missing_tools` clearing it, `sensors/named_tools.py` resolving the
+recipe's `${detector:rubocop}` — searches the project's `bin` ahead of the
+default path.
 
-The lookup belongs in `project_paths` and not in this sensor. `missing_tools`
+The lookup belongs in the core and not in this sensor. `missing_tools`
 clears a tool by asking `tool_executable`, and `sensors/spawn.py` spawns the
 file it answered with, so a second answer here would let setup clear a rubocop
-the run then does not use. `bin` ranks *after* `node_modules/.bin` and
-`.venv/bin` because it is the least specific of the three: those two can hold
-nothing else, where a `bin` may hold a project's own scripts.
+the run then does not use. And `bin` is deliberately **not** on the default
+search path (`project_paths.tool_search_path`), only on this detector's:
+`node_modules/.bin` and `.venv/bin` are directories an install keeps to
+itself, where a `bin` may hold a project's own scripts, and a script named
+after a tool should not outrank a real install beside it. Naming the
+directory on the detector keeps it in play for exactly the tools that live
+in it.
 
 ## Testing
 

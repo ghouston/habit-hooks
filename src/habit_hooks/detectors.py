@@ -16,7 +16,10 @@ other way, as the name ``Config`` annotates its detectors with.
 
 from __future__ import annotations
 
-from attrs import fields, frozen
+import ntpath
+import posixpath
+
+from attrs import field, fields, frozen
 
 from .cli import ConfigError
 from .config_schema import named_keys, reject_unknown
@@ -37,9 +40,18 @@ class Detector:
     name: str
     kind: str
     install: str
+    # Directories under the project this tool is looked for in ahead of the
+    # default search path — bundler's ``bin``, which a plugin names for the
+    # tools it keeps there. A tuple so a detector read from TOML (a list) and
+    # one built in Python compare equal.
+    search_paths: tuple[str, ...] = field(converter=tuple, default=())
 
 
 DETECTOR_FIELDS = frozenset(field.name for field in fields(Detector))
+# The fields an entry must carry. ``search_paths`` is not among them: it names
+# the one thing a detector may leave unsaid — no directory beyond the default
+# search path — so requiring it would refuse every existing declaration.
+REQUIRED_FIELDS = frozenset({"name", "kind", "install"})
 
 
 def _reject_unknown_kind(value: object, where: str) -> None:
@@ -76,27 +88,68 @@ def _reject_unusable_field(entry: dict, key: str, where: str) -> None:
     )
 
 
+def _reject_unusable_search_paths(entry: dict, where: str) -> None:
+    """A search path names a directory under the project, so it is a non-empty
+    string that stays there or nothing: an absolute path is a directory the
+    project does not keep, and an empty one is the absence it looks like."""
+    paths = entry.get("search_paths", [])
+    unusable = not isinstance(paths, list) or not all(
+        _names_a_directory(path) for path in paths
+    )
+    if unusable:
+        raise ConfigError(
+            f"{_label(entry)} needs 'search_paths' as a list of non-empty "
+            f"directories under the project in {where}; got {paths!r}"
+        )
+
+
+def _names_a_directory(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and bool(value.strip())
+        and not _escapes_the_project(value)
+    )
+
+
+def _escapes_the_project(path: str) -> bool:
+    """Whether the path names anything but a directory under the project.
+
+    Both platforms' forms, not the host's, because a config travels: a Windows
+    drive or rooted path reads as relative to ``os.path.isabs`` on a Mac and is
+    a directory this project still does not keep. Drive-relative (``C:tools``)
+    is refused with them — it names the current directory of another drive —
+    and so is a ``..`` component, which climbs out the same way.
+    """
+    if ntpath.splitdrive(path)[0]:
+        return True
+    components = path.replace("\\", "/").split("/")
+    return posixpath.isabs(path) or ntpath.isabs(path) or ".." in components
+
+
 def _reject_invalid_detector(entry: object, where: str) -> None:
     """Fail clearly on one entry that cannot become a :class:`Detector`.
 
-    Every field is required, and required to answer: one missing — or emptily
-    naming — its ``install`` names a tool and then leaves the reader to find it,
-    and one missing its ``kind`` cannot be looked for at all. An unknown ``kind``
-    is refused for the same reason: nothing knows how to look for it, so it could
-    only ever be reported missing.
+    ``name``, ``kind`` and ``install`` are required, and required to answer:
+    one missing — or emptily naming — its ``install`` names a tool and then
+    leaves the reader to find it, and one missing its ``kind`` cannot be looked
+    for at all. ``search_paths`` is the one field a detector may leave out; what
+    it says when it does say it is refused below. An unknown ``kind`` is refused
+    for the same reason: nothing knows how to look for it, so it could only ever
+    be reported missing.
     """
     if not isinstance(entry, dict):
         raise ConfigError(
             f"detector {entry!r} is not a table in {where}; "
             "expected { name = ..., kind = ..., install = ... }"
         )
-    missing = sorted(key for key in DETECTOR_FIELDS if key not in entry)
+    missing = sorted(key for key in REQUIRED_FIELDS if key not in entry)
     if missing:
         raise ConfigError(f"{_label(entry)} is missing {named_keys(missing)} in {where}")
     reject_unknown(DETECTOR_FIELDS, entry, f"a detector in {where}")
     _reject_unknown_kind(entry["kind"], where)
     _reject_unusable_field(entry, "name", where)
     _reject_unusable_field(entry, "install", where)
+    _reject_unusable_search_paths(entry, where)
 
 
 def reject_invalid_detectors(value: object, where: str) -> None:

@@ -118,6 +118,30 @@ def test_a_tool_named_twice_stands_for_the_same_file_at_both(
     assert argv[2] == argv[0]
 
 
+def test_a_named_tool_is_looked_for_along_the_search_path_its_detector_names(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``bin`` is not on the default search path, so the plugin whose tools live
+    there names the directory on the detector — and the recipe's
+    ``${detector:<name>}`` stands for a file found along exactly that path, the
+    same one the setup asked when it cleared the tool (``missing_tools``).
+    """
+    project = project_with_no_tools(tmp_path, monkeypatch)
+    write_stub(project / "bin", "rubocop")
+    declaring_bundler = declaring(
+        '{ name = "rubocop", kind = "command", install = "gem install rubocop", '
+        'search_paths = ["bin"] }'
+    )
+    part = one_sensor(
+        project, 'argv = ["${detector:rubocop}", "--json"]', declaring_bundler
+    )
+
+    argv = _argv(project, part)
+
+    assert Path(argv[0]).parent == project / "bin"
+    assert Path(argv[0]).stem == "rubocop"
+
+
 @A_MACHINE_THAT_DOES_NOT
 def test_a_shell_recipe_splices_the_file_quoted(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch

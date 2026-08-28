@@ -64,8 +64,14 @@ class DeclaredTools:
     project_dir: Path
 
     def file_for(self, name: str) -> str | None:
-        """The file this project runs for the command ``name``, or ``None``."""
-        return tool_executable(name, self.project_dir)
+        """The file this project runs for the command ``name``, or ``None``.
+
+        Looked for along the search paths this run's plugins declared for it —
+        a directory the default path does not know, bundler's ``bin``, is the
+        declaring plugin's to name — so the question is the same one
+        ``missing_tools`` asks of the same detector.
+        """
+        return tool_executable(name, self.project_dir, _search_paths(name, self.declared))
 
     def kinds_of(self, name: str) -> list[str]:
         """Every way this run's plugins declare that ``name`` is looked for."""
@@ -79,6 +85,16 @@ class DeclaredTools:
             f"{detector.name} ({detector.kind})" for detector in self.declared
         )
         return named or "none"
+
+
+def _search_paths(name: str, declared: list[Detector]) -> tuple[str, ...]:
+    """Every directory under the project the declared detectors name for ``name``."""
+    return tuple(
+        path
+        for detector in declared
+        if detector.name == name
+        for path in detector.search_paths
+    )
 
 
 def files_for(part: Part, kind: str, tools: DeclaredTools) -> dict[str, str | None]:
