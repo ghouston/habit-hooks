@@ -9,7 +9,7 @@ mapping bug and a tool-upgrade bug cannot be mistaken for one another.
 from __future__ import annotations
 
 import pytest
-from rubocop_sensor import COP_SMELLS, findings, offenses, smell_of
+from rubocop_report import COP_SMELLS, findings, offenses, smell_of
 
 
 def _offense(cop: str, at: tuple[int, int] = (1, 1), message: str = "nope") -> dict:
