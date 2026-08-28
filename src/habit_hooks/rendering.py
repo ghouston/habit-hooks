@@ -154,7 +154,8 @@ def resolve_guide(finding: dict, config: Config, resolver: Resolver) -> Path:
     plugins = plugins_for_language(finding.get("language"), config)
     guide = resolver.first(plugins, guide_names(finding["smell"], config))
     if guide is None:
-        guide = resolver.guide(UNCOACHED_GUIDE, config.plugins)
+        # Same language-filtered order: never another language's guide (#150).
+        guide = resolver.guide(UNCOACHED_GUIDE, plugins)
     return guide
 
 
