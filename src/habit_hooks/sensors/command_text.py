@@ -8,7 +8,9 @@ A part spells one of two recipes, and this is where the difference is spent:
   and with no shell in the way a quote character would simply become part of
   the filename. It is also the only form that runs where there is no POSIX
   shell: on Windows ``bash`` is usually the WSL launcher, which answers from
-  another filesystem entirely.
+  another filesystem entirely. Its first element may name a tool as a bare
+  name, resolved to that tool's file exactly as ``${detector:<name>}`` is
+  (``named_tools``).
 * ``command = "..."`` is text for ``bash -c``, and buys syntax a list cannot
   carry — the ``ruff`` and ``eslint`` sensors pipe their tool through ``jq`` —
   at the price of a shell to read it, which is why a platform without one
@@ -92,11 +94,22 @@ def _argv_form(part: Part, files: list[str], config_path: Path | None) -> list[s
         "${args}": part.args,
         "${config}": _config_arguments(config_path),
     }
+    elements = part.argv or []
+    program = [_program(part, elements[0])] if elements else []
     return [
         argument
-        for element in part.argv or []
+        for element in [*program, *elements[1:]]
         for argument in _element_arguments(part, element, lists)
     ]
+
+
+def _program(part: Part, element: str) -> str:
+    """The program element as the file this project runs for it, where a name
+    this run's plugins declared resolved to one (``named_tools``): a bare name
+    is looked up again by whatever spawns it, along paths that know nothing of
+    the detector's own. Anything else keeps the element it was."""
+    file = part.detectors.get(element)
+    return element if file is None else file
 
 
 def _element_arguments(
