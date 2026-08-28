@@ -84,13 +84,34 @@ git tag vX.Y.Z && git push origin main --tags
 ## 5. An install instruction is verified from an install, never from empty
 
 Anyone handed an install command already has habit-hooks — that is *why* they are
-reading it. So test the command from their state, not from an empty machine:
+reading it. So test the command from their state, not from an empty machine.
+
+**Half of this belongs before the tag, and half cannot.** The upgrade *mechanics*
+need only the wheels, which `uv build` has already produced in step 4 — so run
+them from `dist/_relcheck` while the tag can still be moved. Only the cache
+behaviour below needs a live PyPI, because the stale cache does not exist until
+the version does.
+
+Before the tag, against the built wheels:
 
 ```
 export UV_TOOL_DIR=$(mktemp -d) UV_TOOL_BIN_DIR=$(mktemp -d)
-uv tool install 'habit-hooks[typescript]'      # the version they are on now
-uv tool install <the exact command about to be published>
+uv tool install 'habit-hooks[typescript]==<the version they are on now>'
+uv tool install --force --find-links dist/_relcheck 'habit-hooks[typescript]==X.Y.Z'
 "$UV_TOOL_BIN_DIR/habit-hooks" --version       # did it actually move?
+```
+
+Every package must move together in that output — a core that upgrades while a
+plugin stays behind is the failure the in-sync rule exists to stop, and it is
+visible here and nowhere else. Then run the installed binary against a throwaway
+project and read a real finding out of it, so the answer covers the plugins the
+core just pulled in, not only its own version string.
+
+After the publish, against PyPI:
+
+```
+uv tool install <the exact command about to be published>
+"$UV_TOOL_BIN_DIR/habit-hooks" --version
 ```
 
 `uv tool install` **does not upgrade an already-installed tool.** It prints

@@ -42,13 +42,46 @@ coaches your Ruby the way it already coached your Python and TypeScript.
   every run it completed, so no envelope means no run, and the run fails instead
   of reporting nothing wrong.
 
-## 1.4.0rc3
+## 1.4.0
 
-Reported by @imalliaras (#142) and @FrankRaiser (#140, #143). None of them is a
-Windows bug: all three reproduce on any platform, and were found there only
-because that is where these two were running.
+Native Windows support, plus everything else the two Windows reporters found on
+the way — none of which is a Windows bug; all of it reproduces on any platform.
+Reported by @FrankRaiser (#133, #140, #143) and @imalliaras (#134, #142),
+neither of whom could get a run to complete when they started.
 
 ### Fixed
+
+- **habit-hooks runs on native Windows.** Every sensor was spawned through
+  `bash -c`, which Windows has not got — and where `bash` does resolve there it
+  is usually `C:\Windows\System32\bash.exe`, the WSL launcher, which answers
+  about a different filesystem. Nine of the eleven shipped sensors and
+  transformers never needed a shell; the other two only needed one to reach
+  `jq`. All eleven now spell `argv` and are spawned directly.
+
+- **Nothing decodes in the console's codepage any more.** Every guide, config
+  and spec file this tool reads is UTF-8 and now says so. On a cp1252 console
+  the first guide it rendered killed the run with a `UnicodeDecodeError` (#133);
+  the same bug hit any non-UTF-8 locale, including `LC_ALL=C` on Linux. The
+  streams it writes are UTF-8 too, so a printed block's box-drawing characters
+  cannot fail on the way out.
+
+- **A tool installed as `.cmd` or `.bat` is found.** Windows appends only `.exe`
+  to a bare command name, so `jscpd.CMD`, `knip.cmd` and `pmd.bat` were cleared
+  at setup and unreachable at run time. One lookup now answers both questions.
+
+- **`init` no longer offers an install it cannot run.** Its install command went
+  through `shell=True`, which on Windows is `cmd.exe`, and `cmd.exe` does not
+  understand the quotes in `uv tool install 'habit-hooks[python]'`.
+
+- **A wedged sensor still says why.** Windows raises its timeout carrying no
+  output at all, so the notice quoted back nothing where the tool had explained
+  itself.
+
+- **A mistyped `argv` in a sensor spec answers with a sentence.** `argv = "ruff"`
+  is a string, and a string is iterable: it spawned four one-character arguments
+  and the run reported needing the `r` command. A non-string element raised a
+  traceback. Both are now refused by name at exit 2 — the code for a broken
+  tool — instead of exit 1, the code reserved for a finding to fix.
 
 - **A sensor no longer dies without a word when its tool has a lot to say.**
   Node caps a captured stream at 1 MB unless told otherwise, and the eslint
@@ -103,49 +136,6 @@ because that is where these two were running.
 - **The knip sensor reports a column under the name the contract gives it.**
   knip spells it `col`; every other sensor and `docs/sensor-interface.spec.md`
   spell it `column`, so the position was invisible to anything asking by name.
-
-## 1.4.0rc2
-
-Native Windows support. Reported by @FrankRaiser (#133) and @imalliaras (#134),
-neither of whom could get a run to complete.
-
-New in `rc2`, on top of everything `1.4.0rc1` shipped: a sensor spec names the
-tool it wraps, the `cmd.exe` argument guard reaches the tool a helper spawns,
-and a mistyped `argv` answers with a sentence.
-
-### Fixed
-
-- **habit-hooks runs on native Windows.** Every sensor was spawned through
-  `bash -c`, which Windows has not got — and where `bash` does resolve there it
-  is usually `C:\Windows\System32\bash.exe`, the WSL launcher, which answers
-  about a different filesystem. Nine of the eleven shipped sensors and
-  transformers never needed a shell; the other two only needed one to reach
-  `jq`. All eleven now spell `argv` and are spawned directly.
-
-- **Nothing decodes in the console's codepage any more.** Every guide, config
-  and spec file this tool reads is UTF-8 and now says so. On a cp1252 console
-  the first guide it rendered killed the run with a `UnicodeDecodeError` (#133);
-  the same bug hit any non-UTF-8 locale, including `LC_ALL=C` on Linux. The
-  streams it writes are UTF-8 too, so a printed block's box-drawing characters
-  cannot fail on the way out.
-
-- **A tool installed as `.cmd` or `.bat` is found.** Windows appends only `.exe`
-  to a bare command name, so `jscpd.CMD`, `knip.cmd` and `pmd.bat` were cleared
-  at setup and unreachable at run time. One lookup now answers both questions.
-
-- **`init` no longer offers an install it cannot run.** Its install command went
-  through `shell=True`, which on Windows is `cmd.exe`, and `cmd.exe` does not
-  understand the quotes in `uv tool install 'habit-hooks[python]'`.
-
-- **A wedged sensor still says why.** Windows raises its timeout carrying no
-  output at all, so the notice quoted back nothing where the tool had explained
-  itself.
-
-- **A mistyped `argv` in a sensor spec answers with a sentence.** `argv = "ruff"`
-  is a string, and a string is iterable: it spawned four one-character arguments
-  and the run reported needing the `r` command. A non-string element raised a
-  traceback. Both are now refused by name at exit 2 — the code for a broken
-  tool — instead of exit 1, the code reserved for a finding to fix.
 
 ### Changed
 
