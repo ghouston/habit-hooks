@@ -32,9 +32,10 @@ class Part:
     # A sensor's own discovery globs: when set, the run's scope is narrowed to
     # this subset for this sensor alone. ``None`` means "the whole scope".
     files: list[str] | None = None
-    # The file this project runs for each tool the recipe names with
-    # ``${detector:<name>}``, or ``None`` where that tool is not installed
-    # (``named_tools``). Only the tools it names, never its plugin's others.
+    # The file this project runs for each tool the recipe names — with
+    # ``${detector:<name>}``, or as the bare program an ``argv`` spells — or
+    # ``None`` where that tool is not installed (``named_tools``). Only the
+    # tools it names, never its plugin's others.
     detectors: dict[str, str | None] = field(default_factory=dict)
 
     @property

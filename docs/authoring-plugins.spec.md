@@ -119,6 +119,11 @@ declares, and a name declared `node-module`, are both refused as the config load
 the ordinary missing-tool failure — the sensor is never spawned, and the notice
 names the tool it needed, without your script having to say so.
 
+A bare `argv[0]` that names a declared `command` detector is resolved to that
+same file, along the detector's own `search_paths`, and fails the same way when
+it is not installed; only a name no plugin declares is left for the spawn to
+look up along the default path.
+
 Hand that file to a bundled script rather than looking the tool up again inside
 it. Every shipped sensor that names a tool passes it as the script's first
 argument:
