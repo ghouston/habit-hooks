@@ -48,9 +48,22 @@ class _Tools:
     def under(cls, project_dir: Path, declared: list[Detector]) -> _Tools:
         return cls(
             project_dir,
-            tool_executable(NODE, project_dir),
+            tool_executable(NODE, project_dir, _node_search_paths(declared)),
             any(_is_node(detector) for detector in declared),
         )
+
+
+def _node_search_paths(declared: list[Detector]) -> tuple[str, ...]:
+    """Every directory the declared ``node`` detectors name for node, so the
+    node that answers for the modules is found the way a run finds it — and a
+    project whose node lives in a directory the default path does not know is
+    not told its modules are missing behind a node it has."""
+    return tuple(
+        path
+        for detector in declared
+        if _is_node(detector)
+        for path in detector.search_paths
+    )
 
 
 def _is_node(detector: Detector) -> bool:
@@ -79,7 +92,9 @@ def _is_missing(detector: Detector, tools: _Tools) -> bool:
     """
     if detector.kind == NODE_MODULE_KIND:
         return _module_is_missing(detector.name, tools)
-    return tool_executable(detector.name, tools.project_dir) is None
+    return (
+        tool_executable(detector.name, tools.project_dir, detector.search_paths) is None
+    )
 
 
 def _module_is_missing(module: str, tools: _Tools) -> bool:

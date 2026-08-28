@@ -7,7 +7,8 @@ and half-used. Every refusal quotes the detector it is about, because a config
 declares several and one of them being wrong must not send the reader through
 all of them.
 
-The refusals a config earns everywhere else are ``test_config_schema.py``; what
+The refusals a config earns everywhere else are ``test_config_schema.py``; the
+ones a ``search_paths`` entry earns are ``test_detector_search_paths.py``; what
 an accepted detector contributes to a run is ``test_plugin_defaults.py``.
 """
 
