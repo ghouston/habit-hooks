@@ -256,8 +256,10 @@ entry that is not a table, one missing one of them, or one whose `name` or
 a tool named with no way to install it leaves the reader to go and find it,
 which is the whole thing a detector exists to avoid. A `search_paths` entry
 must be a non-empty directory under the project — absolute paths (including
-Windows drive forms) and `..` components are rejected — because a directory
-the project does not keep cannot be where its pinned tools live.
+Windows drive forms), `..` components and `:`/`;` separators are rejected —
+because a directory the project does not keep cannot be where its pinned tools
+live, and a separator would splice one into the lookup (the entries are joined
+into one search path with exactly those characters).
 
 ## `[sensors.<name>]`
 

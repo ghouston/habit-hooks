@@ -91,7 +91,8 @@ def _reject_unusable_field(entry: dict, key: str, where: str) -> None:
 def _reject_unusable_search_paths(entry: dict, where: str) -> None:
     """A search path names a directory under the project, so it is a non-empty
     string that stays there or nothing: an absolute path is a directory the
-    project does not keep, and an empty one is the absence it looks like."""
+    project does not keep, a path separator splices directories into the
+    lookup, and an empty one is the absence it looks like."""
     paths = entry.get("search_paths", [])
     unusable = not isinstance(paths, list) or not all(
         _names_a_directory(path) for path in paths
@@ -107,8 +108,21 @@ def _names_a_directory(value: object) -> bool:
     return (
         isinstance(value, str)
         and bool(value.strip())
+        and not _splices_extra_directories(value)
         and not _escapes_the_project(value)
     )
+
+
+def _splices_extra_directories(path: str) -> bool:
+    """Whether the entry smuggles more than one directory into the search path.
+
+    The entries are joined into one lookup path with exactly these characters
+    — ``:`` on POSIX, ``;`` on Windows — so an entry carrying either splices
+    every directory after it into each lookup for the tool, and
+    ``bin:../tools`` would search ``../tools`` as the project's own. Both are
+    refused on every host because a plugin config travels between platforms.
+    """
+    return ":" in path or ";" in path
 
 
 def _escapes_the_project(path: str) -> bool:
@@ -144,7 +158,9 @@ def _reject_invalid_detector(entry: object, where: str) -> None:
         )
     missing = sorted(key for key in REQUIRED_FIELDS if key not in entry)
     if missing:
-        raise ConfigError(f"{_label(entry)} is missing {named_keys(missing)} in {where}")
+        raise ConfigError(
+            f"{_label(entry)} is missing {named_keys(missing)} in {where}"
+        )
     reject_unknown(DETECTOR_FIELDS, entry, f"a detector in {where}")
     _reject_unknown_kind(entry["kind"], where)
     _reject_unusable_field(entry, "name", where)
