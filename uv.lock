@@ -179,7 +179,7 @@ source = { editable = "plugins/python" }
 
 [[package]]
 name = "habit-hooks-ruby"
-version = "1.4.0rc3"
+version = "1.4.0"
 source = { editable = "plugins/ruby" }
 
 [[package]]

@@ -71,11 +71,24 @@ jobs:
           }
           Expand-Archive "$env:RUNNER_TEMP\pmd.zip" -DestinationPath "$env:RUNNER_TEMP\pmd"
           "$env:RUNNER_TEMP\pmd\pmd-bin-7.26.0\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
-      # The ruby plugin's sensor and its spec cases need the real rubocop. Ruby
-      # itself is preinstalled on both runner images, so the gem is the whole
-      # requirement. The version is pinned for the reason PMD's is: an
-      # unpinned lint tool turns every new cop into a CI failure on a commit
-      # that did not cause it. Bumping it means changing this one line.
+      # The ruby plugin's sensor and its spec cases need the real rubocop. The
+      # gem's version is pinned for the reason PMD's is: an unpinned lint tool
+      # turns every new cop into a CI failure on a commit that did not cause it.
+      # Bumping it means changing the one line below.
+      #
+      # setup-ruby rather than the image's preinstalled Ruby, on both platforms.
+      # rubocop 1.89 pulls rubocop-ast 1.50, which depends on prism — and prism
+      # ships no precompiled gems at all (only the `ruby` platform source gem,
+      # unlike nokogiri), so its C extension compiles on every install. The
+      # system Ruby on ubuntu cannot write /var/lib/gems (Gem::FilePermissionError),
+      # and on Windows its extconf picks Git-for-Windows' MSYS make, which reads
+      # `C:/...` as `/C/...` and dies with "No rule to make target". setup-ruby
+      # owns a runner-writable toolcache and wires the MSYS2 mingw toolchain in
+      # on Windows, so the one gem install works unchanged on both legs.
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: '3.4'
       - name: Install rubocop
         run: gem install --no-document rubocop -v 1.89.0
       - name: Test
