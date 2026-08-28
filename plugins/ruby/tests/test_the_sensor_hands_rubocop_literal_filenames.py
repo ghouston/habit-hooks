@@ -57,6 +57,7 @@ def test_option_parsing_ends_before_the_files_are_named(
             "--format",
             "json",
             "--force-exclusion",
+            "--raise-cop-error",
             "--",
             "-charge.rb",
             "plain.rb",

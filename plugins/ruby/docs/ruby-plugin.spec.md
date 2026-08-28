@@ -150,11 +150,13 @@ habit-sensors --all | jq -c '[.[] | {smell, source: .issues[0].details.source}]'
 
 ## The project's own exclusions still apply
 
-`--force-exclusion` is the one flag the sensor adds, and it keeps a project's
-`AllCops: Exclude:` meaning something once habit-hooks names files on the
-command line. Without it RuboCop reads a named file as a deliberate request and
-lints it anyway, so the project's config would stop applying the moment this
-tool ran it.
+`--force-exclusion` is the one flag the sensor adds that changes what RuboCop
+*lints*: it keeps a project's `AllCops: Exclude:` meaning something once
+habit-hooks names files on the command line. Without it RuboCop reads a named
+file as a deliberate request and lints it anyway, so the project's config
+would stop applying the moment this tool ran it. (The sensor also passes
+`--raise-cop-error`, which makes a crashing cop *fail* with
+`Error:` and exit 2 which habit-hooks interprets as a failed run.)
 
 📄.rubocop.yml
 ```yaml
