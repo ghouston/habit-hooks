@@ -93,6 +93,10 @@ def run_rubocop(rubocop: str, files: list[str]) -> subprocess.CompletedProcess[s
     ``--`` ends option parsing before the files, so a valid filename beginning
     with ``-`` is a file rather than a pile of short options — ``-c`` among them,
     which takes the rest as its ``--config`` value.
+
+    ``--raise-cop-error`` is what makes a cop that raises an ``Error:`` and
+    exit 2, detectable by habit-hooks as a failed run. A run with offences
+    and no crash is untouched, they exit 1 with a valid envelope.
     """
     return subprocess.run(
         [
@@ -100,6 +104,7 @@ def run_rubocop(rubocop: str, files: list[str]) -> subprocess.CompletedProcess[s
             "--format",
             "json",
             "--force-exclusion",
+            "--raise-cop-error",
             "--",
             *[literal_spelling_of(file) for file in files],
         ],

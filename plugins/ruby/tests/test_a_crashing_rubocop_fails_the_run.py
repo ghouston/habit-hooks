@@ -124,6 +124,55 @@ def test_a_config_naming_an_unloadable_gem_s_cops_fails_the_run(
     assert "rubocop-rails" in result.stderr
 
 
+RAISING_COP = '''
+require "rubocop"
+
+module RuboCop
+  module Cop
+    module Custom
+      class AlwaysRaises < Base
+        def on_new_investigation
+          raise "boom from a custom cop"
+        end
+      end
+    end
+  end
+end
+'''
+
+
+def test_a_cop_that_raises_is_a_crash_not_a_clean_file(
+    tmp_path: Path, rubocop: str
+) -> None:
+    """The case `--raise-cop-error` exists for in `run_rubocop`.
+
+    Without the flag RuboCop rescues a raising cop, reports the crash on
+    stderr alone, and exits 1 with a valid envelope listing the file's
+    offences as `[]` — every guard the sensor has is satisfied, and a cop that
+    checked nothing reads as a clean file. The flag turns that into an
+    `Error:` and exit 2, which this sensor has always carried through.
+    """
+    (tmp_path / "raising_cop.rb").write_text(RAISING_COP, encoding="utf-8")
+    (tmp_path / ".rubocop.yml").write_text(
+        'require: ./raising_cop.rb\n\nAllCops:\n  TargetRubyVersion: 3.4\n'
+        "  DisabledByDefault: true\n\nCustom/AlwaysRaises:\n  Enabled: true\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "app.rb").write_text("puts 'hi'\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(SENSOR), rubocop, "app.rb"],
+        cwd=tmp_path,
+        capture_output=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+
+    assert result.returncode == 2
+    assert result.stdout.strip() == ""
+    assert "boom from a custom cop" in result.stderr
+
+
 def test_an_unreadable_config_fails_the_run(tmp_path: Path, rubocop: str) -> None:
     """A `.rubocop.yml` that is not YAML at all, the typo case, which must be a
     named failure rather than a run that quietly measured nothing."""
