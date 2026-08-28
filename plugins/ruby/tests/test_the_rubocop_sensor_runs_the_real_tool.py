@@ -20,6 +20,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from platform_probe import A_FILESYSTEM_THAT_ALLOWS_A_STAR_IN_A_FILENAME
+
 SENSOR = (
     Path(__file__).resolve().parents[1]
     / "src/habit_hooks_ruby/sensors/rubocop_sensor.py"
@@ -71,7 +73,7 @@ def test_real_offenses_reach_their_canonical_smells(tmp_path: Path, rubocop: str
     }
     assert {finding["issues"][0]["details"]["source"] for finding in found} == {
         "rubocop:Metrics/ParameterLists",
-        "rubocop:Lint/UselessAssignment [Correctable]",
+        "rubocop:Lint/UselessAssignment",
     }
 
 
@@ -141,3 +143,49 @@ def test_the_projects_own_exclusions_are_honoured(tmp_path: Path, rubocop: str) 
 
     assert result.returncode == 0
     assert json.loads(result.stdout) == []
+
+
+def test_a_filename_beginning_with_a_dash_is_a_file_not_an_option(
+    tmp_path: Path, rubocop: str
+) -> None:
+    """`--` ends RuboCop's option parsing before the files are named, so a
+    valid filename beginning with `-` is inspected rather than read as flags.
+    Without it `-charge.rb` is short options — `-c` among them, which takes the
+    rest as its `--config` value — and the file is never inspected at all.
+
+    `plain.rb` is the file that proves the discrimination: it is never named,
+    so any spelling that left RuboCop scanning the directory would report it
+    too.
+    """
+    _configure(tmp_path, "Metrics/ParameterLists")
+    offence = "def charge(a, b, c, d, e, f, g)\n  a\nend\n"
+    (tmp_path / "-charge.rb").write_text(offence, encoding="utf-8")
+    (tmp_path / "plain.rb").write_text(offence, encoding="utf-8")
+
+    result = _run(tmp_path, rubocop, "-charge.rb")
+
+    assert result.returncode == 0, result.stderr
+    [finding] = json.loads(result.stdout)
+    assert [issue["key"] for issue in finding["issues"]] == ["-charge.rb"]
+
+
+@A_FILESYSTEM_THAT_ALLOWS_A_STAR_IN_A_FILENAME
+def test_a_literal_star_in_a_filename_is_not_a_glob(
+    tmp_path: Path, rubocop: str
+) -> None:
+    """A `*` in a scope filename is a character in a name, never a pattern.
+    RuboCop hands any argument containing a `*` to `Dir[]`, so unescaped,
+    `star*.rb` sweeps in `star2.rb` as well — a file the scope never named,
+    reported as though it had. Escaped, RuboCop inspects the file it was given
+    and only it.
+    """
+    _configure(tmp_path, "Metrics/ParameterLists")
+    offence = "def charge(a, b, c, d, e, f, g)\n  a\nend\n"
+    (tmp_path / "star*.rb").write_text(offence, encoding="utf-8")
+    (tmp_path / "star2.rb").write_text(offence, encoding="utf-8")
+
+    result = _run(tmp_path, rubocop, "star*.rb")
+
+    assert result.returncode == 0, result.stderr
+    [finding] = json.loads(result.stdout)
+    assert [issue["key"] for issue in finding["issues"]] == ["star*.rb"]

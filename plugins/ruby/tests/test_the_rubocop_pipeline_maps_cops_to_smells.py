@@ -104,27 +104,20 @@ def test_a_cop_named_like_an_object_attribute_is_still_forwarded() -> None:
     assert smell_of("") == ""
 
 
-def test_a_correctable_offence_carries_rubocops_own_tag_in_source() -> None:
-    """`correctable` rides in `source`, spelled as RuboCop spells it, so the
-    listing can show it without a field only this sensor would emit. RuboCop's
-    JSON carries no safety flag, so `[Correctable]` means an autocorrect exists,
-    not that it is safe."""
+def test_a_correctable_offence_is_tagged_no_more_than_any_other() -> None:
+    """`correctable` is RuboCop's autocorrect bookkeeping, not this plugin's.
+    The listing's provenance is which cop fired — `rubocop:<cop>` on every
+    issue — and nothing else, so a flag saying an autocorrect exists neither
+    changes the source nor invites running one. What to do about an offence is
+    the guide's question, and a tag that means "an unsafe autocorrect may
+    exist" is not an answer to it.
+    """
     entry = _entry("Lint/UselessAssignment")
     entry["offense"]["correctable"] = True
 
     [finding] = findings([entry])
 
-    assert (
-        finding["issues"][0]["details"]["source"]
-        == "rubocop:Lint/UselessAssignment [Correctable]"
-    )
-
-
-def test_an_offence_without_the_flag_is_untagged() -> None:
-    """`correctable` absent or false is the same answer: no tag."""
-    [finding] = findings([_entry("Metrics/MethodLength")])
-
-    assert finding["issues"][0]["details"]["source"] == "rubocop:Metrics/MethodLength"
+    assert finding["issues"][0]["details"]["source"] == "rubocop:Lint/UselessAssignment"
 
 
 def test_a_report_inspecting_nothing_is_no_offenses() -> None:

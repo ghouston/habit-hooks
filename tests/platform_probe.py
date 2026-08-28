@@ -113,6 +113,16 @@ A_MACHINE_THAT_CAN_MAKE_A_SYMLINK = pytest.mark.skipif(
 )
 
 
+A_FILESYSTEM_THAT_ALLOWS_A_STAR_IN_A_FILENAME = pytest.mark.skipif(
+    os.name == "nt",
+    reason=(
+        "Windows forbids `*` in a filename outright, so a scope file carrying "
+        "one literally is a POSIX filesystem's own case to tell — skipped out "
+        "loud rather than passed over"
+    ),
+)
+
+
 def on_windows(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(host_platform, "is_windows", lambda: True)
 

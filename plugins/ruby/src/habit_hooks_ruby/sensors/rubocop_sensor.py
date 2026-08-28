@@ -17,11 +17,17 @@ and its ``sys.argv[1]`` is the file this project runs for it, and the scoped
 files follow. A rubocop nobody installed never reaches here at all. The part
 has no file for it, so the run answers with the missing-command notice before
 anything is spawned.
+
+**A scope filename is a name, never an option or a pattern.** RuboCop reads its
+file arguments both ways, and the argv guards each: ``--`` ends option parsing
+before any file is named, and :func:`literal_spelling_of` escapes the glob
+metacharacters RuboCop would otherwise expand.
 """
 
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 
@@ -45,6 +51,31 @@ from rubocop_report import findings, offenses, report
 # it inspected nothing. No report means no run.
 TOOL_EXIT_CODES = (0, 1)
 
+# The characters `Dir[]` reads as a pattern rather than a name. RuboCop hands
+# an argument to `Dir[]` only when it contains a `*` (see
+# `literal_spelling_of`), so these matter only inside an argument that does.
+_GLOB_METACHARACTERS = re.compile(r"[*?\[\]{}\\]")
+
+
+def literal_spelling_of(path: str) -> str:
+    """A scope filename spelled so RuboCop reads it as the file it names.
+
+    RuboCop globs any argument containing a ``*`` —
+    ``TargetFinder#process_explicit_path`` passes it to ``Dir[]`` — so a
+    literal star would sweep in every file it matches. A backslash is ``Dir[]``'s
+    own escape for "this character, literally", which leaves the escaped
+    string still containing a ``*`` for RuboCop to notice and hand to ``Dir[]``
+    in the first place.
+
+    The other metacharacters are escaped only inside such an argument. A path
+    without a ``*`` RuboCop takes verbatim, backslashes included, so escaping a
+    ``?`` there would name a file that does not exist and the run would die on
+    ``Error: No such file or directory``.
+    """
+    if "*" not in path:
+        return path
+    return _GLOB_METACHARACTERS.sub(r"\\\g<0>", path)
+
 
 def run_rubocop(rubocop: str, files: list[str]) -> subprocess.CompletedProcess[str]:
     """What RuboCop said, spawned as the file this sensor was handed for it.
@@ -58,9 +89,20 @@ def run_rubocop(rubocop: str, files: list[str]) -> subprocess.CompletedProcess[s
     is taken as a deliberate request and linted anyway. Without it, a
     project's own exclusions stop meaning anything the moment habit-hooks passes
     a scope.
+
+    ``--`` ends option parsing before the files, so a valid filename beginning
+    with ``-`` is a file rather than a pile of short options — ``-c`` among them,
+    which takes the rest as its ``--config`` value.
     """
     return subprocess.run(
-        [rubocop, "--format", "json", "--force-exclusion", *files],
+        [
+            rubocop,
+            "--format",
+            "json",
+            "--force-exclusion",
+            "--",
+            *[literal_spelling_of(file) for file in files],
+        ],
         capture_output=True,
         encoding="utf-8",
         errors="replace",  # sensors.spawn's policy

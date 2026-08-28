@@ -45,6 +45,26 @@ keeps both measurements inside a single coaching block.
 
 ## Gotchas
 
+### RuboCop reads a file argument as options, then as a glob
+
+A scope filename is exact, and RuboCop reads its file arguments two other ways
+before it reads them as names. A filename beginning with `-` is parsed as short
+options — `-c` among them, which takes the rest as its `--config` value — and an
+argument containing a `*` is handed to `Dir[]`
+(`TargetFinder#process_explicit_path`), so a literal star sweeps in every file
+it matches. `run_rubocop` therefore puts `--` between its flags and the files,
+and `literal_spelling_of` escapes the glob metacharacters.
+
+The escaping is narrower than it looks, and has to be. RuboCop globs only an
+argument containing a `*`; every other one it takes verbatim, backslashes
+included, so escaping a `?` in a starless path would name a file that does not
+exist and the run would die on `Error: No such file or directory`. The other
+metacharacters are escaped only inside a starred argument, where `Dir[]` is
+reading the whole thing as a pattern. The literal-star behavioural test runs
+only where a filesystem allows a `*` in a name — Windows forbids it — so it
+skips there through
+`tests/platform_probe.A_FILESYSTEM_THAT_ALLOWS_A_STAR_IN_A_FILENAME`.
+
 ### RuboCop's exit code lies when the binstub never reached RuboCop
 
 `ruff_sensor` can trust ruff's exit code. `rubocop` is a RubyGems

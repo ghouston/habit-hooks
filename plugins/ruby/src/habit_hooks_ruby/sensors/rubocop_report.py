@@ -91,21 +91,9 @@ def issue(entry: dict) -> dict:
             "line": offense["location"]["line"],
             "column": offense["location"]["column"],
             "message": offense["message"],
-            "source": source_of(offense),
+            "source": "rubocop:" + offense["cop_name"],
         },
     }
-
-
-def source_of(offense: dict) -> str:
-    """Provenance, with RuboCop's own autocorrect flag when it offers one.
-
-    ``correctable`` means an autocorrect exists, not that it is safe — RuboCop's
-    JSON does not carry the per-cop ``SafeAutoCorrect`` attribute. Spelled
-    ``[Correctable]`` exactly as RuboCop's own output spells it, so the tag sets
-    the same expectation the tool does.
-    """
-    source = "rubocop:" + offense["cop_name"]
-    return source + " [Correctable]" if offense.get("correctable") else source
 
 
 def findings(entries: list[dict]) -> list[dict]:
