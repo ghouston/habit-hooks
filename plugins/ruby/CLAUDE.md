@@ -135,7 +135,7 @@ Nearly every Rails repo pins rubocop plus `rubocop-rails` / `rubocop-rspec` /
 `rubocop-performance` in its `Gemfile`, and those gems load only under the
 project's own bundle. This is the likeliest way the sensor fails in practice,
 and it is why the plugin's rubocop detector declares
-`search_paths = ["bin"]` (`src/habit_hooks/detectors.py`):
+`search_paths = ["bin"]` (`src/habit_hooks_ruby/config.toml`):
 `bundle binstubs rubocop` writes `bin/rubocop`, and every lookup for that
 tool — `missing_tools` clearing it, `sensors/named_tools.py` resolving the
 recipe's `${detector:rubocop}` — searches the project's `bin` ahead of the

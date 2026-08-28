@@ -17,13 +17,12 @@ from pathlib import Path
 
 import pytest
 from bare_machine import machine_bin, project_with_no_tools
+from detector_config import accepting_search_paths, refusing_search_paths
 from executable_stub import write_stub
-from habit_hooks.config import load_config
 from habit_hooks.detectors import COMMAND_KIND, NODE_MODULE_KIND, Detector
 from habit_hooks.missing_tools import missing_tools
 from habit_hooks.project_paths import tool_executable
 from habit_hooks.sensors.named_tools import DeclaredTools
-from plugin_fixture import write_plugin, write_project_config
 
 RUBOCOP = Detector(name="rubocop", kind=COMMAND_KIND, install="gem install rubocop")
 BUNDLED_RUBOCOP = Detector(
@@ -107,88 +106,75 @@ def test_a_node_found_along_its_detector_s_search_path_answers_for_its_modules(
     assert missing_tools([BUNDLED_NODE, TS_MORPH], project) == ()
 
 
-INSTALL = 'install = "brew install jq"'
-
-
-def _declaring(tmp_path: Path, search_paths: str) -> None:
-    """A project whose plugin declares jq, searched wherever ``search_paths`` says."""
-    write_project_config(tmp_path, 'plugins = ["alpha"]')
-    entry = (
-        f'{{ name = "jq", kind = "command", {INSTALL}, search_paths = {search_paths} }}'
-    )
-    write_plugin(tmp_path, "alpha", {"config.toml": f"detectors = [{entry}]"})
-
-
-def _refusing(tmp_path: Path, search_paths: str) -> str:
-    """The refusal message, already checked to name the detector and the key."""
-    _declaring(tmp_path, search_paths)
-    with pytest.raises(SystemExit) as failure:
-        load_config(tmp_path)
-    message = str(failure.value)
-    assert "detector 'jq'" in message
-    assert "'search_paths'" in message
-    return message
-
-
-def _accepting(tmp_path: Path, search_paths: str) -> None:
-    """A project declaring jq searched along ``search_paths`` loads cleanly."""
-    _declaring(tmp_path, search_paths)
-    load_config(tmp_path)
-
-
 def test_a_directory_under_the_project_is_valid(tmp_path: Path) -> None:
     """``bin`` is the case the key exists for: bundler's binstubs, which only
     the tools that live there should be looked for along."""
-    _accepting(tmp_path, '["bin"]')
+    accepting_search_paths(tmp_path, '["bin"]')
 
 
 def test_search_paths_written_as_a_string_is_refused(tmp_path: Path) -> None:
     """A single string is the natural wrong guess at a list of one, and a
     string is not a directory anything can search."""
-    assert "list" in _refusing(tmp_path, '"bin"')
+    assert "list" in refusing_search_paths(tmp_path, '"bin"')
 
 
 def test_an_empty_search_path_is_refused(tmp_path: Path) -> None:
     """An empty string is the absence it looks like: it names no directory, so
     searching it is a claim about nothing."""
-    assert "non-empty" in _refusing(tmp_path, '[""]')
+    assert "non-empty" in refusing_search_paths(tmp_path, '[""]')
 
 
 def test_a_posix_absolute_search_path_is_refused(tmp_path: Path) -> None:
     """A search path names a directory under the project, so an absolute one is
     a directory the project does not keep — and a tool found there would be one
     the project never pinned."""
-    assert "under the project" in _refusing(tmp_path, '["/usr/local/bin"]')
+    assert "under the project" in refusing_search_paths(tmp_path, '["/usr/local/bin"]')
 
 
 def test_a_windows_drive_search_path_is_refused(tmp_path: Path) -> None:
     """``C:\\tools`` reads as a relative name to the host's own ``isabs`` on a
     Mac, and a config travels: the directory is not under the project there
     either."""
-    assert "under the project" in _refusing(tmp_path, '["C:\\\\tools"]')
+    assert "under the project" in refusing_search_paths(tmp_path, '["C:\\\\tools"]')
 
 
 def test_a_drive_relative_search_path_is_refused(tmp_path: Path) -> None:
     """``C:tools`` is not a directory under the project even to Windows: it
     names the current directory of another drive, wherever that happens to be."""
-    assert "under the project" in _refusing(tmp_path, '["C:tools"]')
+    assert "under the project" in refusing_search_paths(tmp_path, '["C:tools"]')
 
 
 def test_a_rooted_search_path_is_refused(tmp_path: Path) -> None:
     r"""A leading backslash roots the path on Windows as a leading ``/`` does
     on POSIX, so ``\tools`` names a directory the project does not keep."""
-    assert "under the project" in _refusing(tmp_path, '["\\\\tools"]')
+    assert "under the project" in refusing_search_paths(tmp_path, '["\\\\tools"]')
 
 
 def test_a_search_path_climbing_out_of_the_project_is_refused(tmp_path: Path) -> None:
     """A ``..`` component names a directory outside the project whatever else
     the path says, so the neighbour's tools are never searched as the
     project's own."""
-    assert "under the project" in _refusing(tmp_path, '["../bin"]')
+    assert "under the project" in refusing_search_paths(tmp_path, '["../bin"]')
 
 
 def test_a_search_path_that_climbs_and_returns_is_refused(tmp_path: Path) -> None:
     """``bin/..`` is the project root and ``bin/../bin`` is ``bin``, but a
     ``..`` component is refused rather than resolved: the entry is for a
     reader naming a directory, not for a path algebra."""
-    assert "under the project" in _refusing(tmp_path, '["bin/.."]')
+    assert "under the project" in refusing_search_paths(tmp_path, '["bin/.."]')
+
+
+@pytest.mark.parametrize("separator", [":", ";"])
+def test_a_search_path_carrying_a_path_separator_is_refused(
+    tmp_path: Path, separator: str
+) -> None:
+    """The entries are joined into one search path with exactly these
+    characters — ``:`` on POSIX, ``;`` on Windows — so one entry carrying
+    either splices every directory after it into each lookup for the tool:
+    ``bin:../tools`` searches ``../tools``, a directory the project never
+    named. Note the ``..`` is not a component of its own here, so nothing else
+    catches it. Both are refused on every host because a plugin config travels
+    between POSIX and Windows."""
+    assert "under the project" in refusing_search_paths(
+        tmp_path, f'["bin{separator}../tools"]'
+    )
