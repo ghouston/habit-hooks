@@ -1,32 +1,31 @@
 # habit-hooks-ruby
 
 The Ruby Habit Hooks plugin: wraps [`rubocop`](https://rubocop.org/) for
-structural code-smell detection. Instead of a bare offence, each finding is
-coached by listing the smell, guide for fixing, then a list of matching offenses:
+code-smell detection. Instead of a bare offence, each finding is
+coached by listing the smell, guide for fixing, then a list of file locations.
+This causes the agent to focus on fixing the smell rather than the metric.
 
 ```text
-── high-complexity (3 issues) ──
+── high-complexity (1 issue) ──
 
-High complexity means one method makes too many decisions at once. RuboCop measures it three ways: cyclomatic counts branches, perceived weights nesting, AbcSize counts assignments and calls. One method can therefore be listed more than once below. The count is the symptom; tangled responsibilities are the cause.
+General guidance: the issues listed are code smells. They tell you that there is likely something wrong with the code. Follow these steps:
+- Ask yourself why the rule exists in the first place. What is it telling you about the code?
+- Find a fix that improves maintainability, cuts cruft — doing the same with fewer statements where that lowers cognitive load — and/or improves security, scalability, and resilience.
+- AVOID AT ALL COST: any fix that is designed to appease the reporting tool, but goes against the spirit of the warning.
 
-**Untangle the decisions:**
-1. Lift guards out first: turn precondition checks into early returns (`return unless ...`) so the happy path stays flat. Much of the count is preconditions wrapped around the real work.
-2. Change the shape of what remains: an `if`/`elsif` chain switching on one value is often a hash lookup or polymorphism in disguise; a nested loop is often a `filter`/`map` pipeline.
-3. If the branches are genuinely separate jobs, extract one method per branch, each named for the responsibility it handles.
-
-Useful tip: describe each branch in one sentence. Two branches with the same sentence belong together; a branch you cannot name cleanly wants its own method.
-
-Lower the decision count, not the metric: merged conditions and ternaries move the number while the decisions remain. You are done when a first-time reader can hold the whole method in their head.
-
-app/services/billing.rb:14 rubocop:Metrics/CyclomaticComplexity
-  Cyclomatic complexity for charge is too high. [12/7]
-app/services/billing.rb:14 rubocop:Metrics/PerceivedComplexity
-  Perceived complexity for charge is too high. [13/8]
-app/services/billing.rb:14 rubocop:Metrics/AbcSize
-  Assignment Branch Condition size for charge is too high. [38.4/20]
+app/services/billing.rb:14
 ```
 
-## Install
+# Setup
+
+The steps are:
+
+1. Install the plugin.
+2. Enable it in your `.habit-hooks/config.toml`.
+3. Make sure you have rubocop installed.
+4. Make sure your `.rubocop.yml` enables the cops you want to see.
+
+## Install the plugin
 
 ```sh
 uv tool install "habit-hooks[ruby]"   # pip and pipx work too
@@ -34,23 +33,23 @@ uv tool install "habit-hooks[ruby]"   # pip and pipx work too
 
 Or let setup do it: with habit-hooks already installed, `habit-hooks init` in your
 project detects ruby, names this plugin in `.habit-hooks/config.toml`, and offers to
-run the install for you — see the [root README](https://github.com/habit-hooks/habit-hooks#install).
+run the install for you — see the [Habit-Hooks README #install](https://github.com/habit-hooks/habit-hooks#install).
 
-## Enable
+## Enable the plugin
+
+Installing a plugin does not switch it on — it has to be named in
+`plugins` before habit-hooks runs it.
 
 ```toml
 # .habit-hooks/config.toml
 plugins = ["ruby"]
 ```
 
-Installing a plugin does not switch it on — it has to be named in
-`plugins` before habit-hooks runs it.
+## Sensors: install rubocop
 
-## Detectors
+The ruby plugin supports the rubocop sensor. It can use the any rubocop on your `PATH`, but it is best to point it at the one your project uses. 
 
-- `rubocop` — `gem install rubocop`
-
-## Point it at your project's own rubocop
+Point it at your project's own rubocop:
 
 **If your `Gemfile` pins rubocop, or your `.rubocop.yml` names an extension gem
 (`rubocop-rails`, `rubocop-rspec`, `rubocop-performance`), generate binstubs:**
@@ -58,6 +57,12 @@ Installing a plugin does not switch it on — it has to be named in
 ```sh
 bundle binstubs rubocop
 ```
+
+Otherwise, if you have no rubocop yet, install one:
+
+- `rubocop` — `gem install rubocop`
+
+### How it finds rubocop
 
 habit-hooks' rubocop detector searches your project's `bin/` ahead of the
 machine's `PATH`, so `bin/rubocop` is what it will run — under your bundle,
@@ -71,19 +76,16 @@ lint result:
 Error: `Rails/*` has been extracted to the `rubocop-rails` gem.
 ```
 
-habit-hooks reports that as a failed run rather than a clean one — a crashed
-tool is never "no problems found" — but the fix is to give it the right rubocop.
+habit-hooks reports that as a failed run.
 
-## Your `.rubocop.yml` decides everything
+### Configure your `.rubocop.yml`
 
-The sensor runs `rubocop` and reads what comes back. It passes no `--only` and
-no `--config`, so rubocop discovers your `.rubocop.yml` exactly as it does when
-you run it by hand, and **your habit-hooks run is the run you get from rubocop
-directly**. `--force-exclusion` is the one flag it adds, so your
-`AllCops: Exclude:` keeps applying even though habit-hooks names files
+The sensor runs `rubocop` and reads what comes back.  The rubocop discovers your `.rubocop.yml`
+exactly as it does when you run rubocop by hand.  The `--force-exclusion` is the one flag
+habit-hooks adds, so your `AllCops: Exclude:` keeps applying even though habit-hooks names files
 explicitly.
 
-Cops this plugin has a canonical smell for are reported under it:
+Cops are mapped to canonical smells and are reported under it:
 
 | Cop | Smell |
 |-----|-------|
@@ -98,26 +100,13 @@ Cops this plugin has a canonical smell for are reported under it:
 | `Lint/SuppressedException` | `swallowed-exception` |
 | `Lint/Syntax` | `parse-error` |
 
-Every other cop is **forwarded under its own name** — you turned it on, so you
-get to see it. It coaches without failing the run; set the root `uncoached` key
-to `ignore` to drop them, or `enforce` to fail on them
+All other cops are **forwarded under their own name** by default.
+Recommended: add coaches for cops as needed (see [Customization](#customization)).
+Set the root `uncoached` key to `ignore` to drop these cops,
+or `enforce` to fail on the run on them 
 ([config.md](https://github.com/habit-hooks/habit-hooks/blob/main/docs/config.md)).
 
-## Findings the `generic` plugin adds
-
-`habit-hooks init` writes `generic` into your `plugins` list alongside `ruby`,
-so a generated setup also coaches two smells this plugin has no part in:
-
-Drop `generic` from `plugins` if you would rather not see either.
-
-- **`oversized-file`** — from generic's built-in line counter. Nothing to
-  install or configure.
-- **`duplicated-code`** — from generic's jscpd sensor. This one needs setup:
-  jscpd itself (`npm install --save-dev jscpd`) and a `.jscpd.json` of your
-  own, because its bundled config scans `src/` — a directory a Ruby project
-  usually doesn't have.
-
-### A starting `.rubocop.yml`
+#### A starting `.rubocop.yml`
 
 If you have no config yet, this turns on the structural cops this plugin maps
 and nothing else. It is a suggestion, not a default. Habit-hooks never writes
@@ -145,4 +134,123 @@ Lint/SuppressedException:
   Enabled: true
 ```
 
-Part of [habit-hooks](https://github.com/habit-hooks/habit-hooks).
+# Customization
+
+Ruby Habit Hooks is customizable without modifying the installed package. Project
+files under `.habit-hooks/ruby/` override the corresponding files shipped by the
+Ruby plugin. Commit these overrides if they are intended to apply to the whole
+project.
+
+## Add project-specific coaching
+
+Replace any Ruby guide by creating a file with the same name under
+`.habit-hooks/ruby/guides/`. For example,
+`.habit-hooks/ruby/guides/high-complexity.md` replaces the default coaching for
+the `high-complexity` smell while leaving all other guides unchanged.
+
+
+An unmapped cop forwarded under its own name can use a custom filename through the project
+config:
+
+```toml
+[smells."Style/StringLiterals"]
+guide = "style-string-literals.md"
+```
+
+Then add a guide at `.habit-hooks/ruby/guides/style-string-literals.md`. For example:
+
+```markdown
+Use the quote style established by this project. preserve interpolation and readability.
+
+{% for issue in issues -%}
+{{ issue.details.file }}:{{ issue.details.line }}
+{% endfor %}
+```
+
+Guides are Markdown Jinja templates. They can use `smell` and `language`, read
+smell-level `details`, and loop over `issues` to show each offense.  The loop in
+the example above writes the file and line of each issue (required, otherwise the
+agent will not know where the offense occurred).
+
+## Add a cop-to-smell mapping
+
+Prefer mapping a cop to an existing general smell when the guidance fits. This
+lets the project benefit from shared coaching and keeps the smell vocabulary
+small. If the cop represents a smell that should be useful beyond your project,
+consider contributing the mapping, guide, and any needed vocabulary changes in
+a pull request to the [Habit Hooks project](https://github.com/habit-hooks/habit-hooks).
+
+The built-in cop mappings live in `sensors/rubocop_report.py`, in the
+`COP_SMELLS` table.
+
+To add a mapping for a project, copy that file to
+`.habit-hooks/ruby/sensors/rubocop_report.py` and add an entry, for example:
+
+```python
+COP_SMELLS = {
+    # existing mappings ...
+    "Style/StringLiterals": "project-style",
+}
+```
+
+Because the sensor helper imports this file from its own directory, also copy
+`rubocop_sensor.py` and `rubocop.toml` to the same override directory (.habit-hooks/ruby/sensors).
+Keep the recipe in the TOML file the same; its `${dir}` then points at the override and
+loads your customized report module.
+
+If the new mapping uses an existing smell, its existing guide and severity are
+used. For a new smell, add a guide and configure its severity as needed:
+
+```toml
+[smells.project-style]
+severity = "suggested"
+```
+
+Then add `.habit-hooks/ruby/guides/project-style.md`.
+
+## Add or replace a sensor
+
+A sensor is a TOML recipe under `sensors/`. To replace the RuboCop sensor,
+override `.habit-hooks/ruby/sensors/rubocop.toml`; to add a separate sensor,
+create a new recipe such as `.habit-hooks/ruby/sensors/custom-check.toml` and
+add its name to the Ruby plugin's `sensors` list in
+`.habit-hooks/ruby/config.toml`:
+
+```toml
+sensors = ["rubocop", "custom-check"]
+```
+
+The plugin config override is a complete replacement, so copy the shipped
+Ruby `config.toml` and preserve its `language`, `files`, `transformers`, and
+`detectors` entries when adding a sensor. Declare every external command the
+sensor uses in `detectors`, and use `${detector:<name>}` in its recipe when the
+sensor invokes that command.
+
+The sensor must print a JSON array of Habit Hooks findings. See the
+[sensor interface](https://github.com/habit-hooks/habit-hooks/blob/main/docs/sensor-interface.spec.md)
+for the finding shape and available recipe placeholders.
+
+For example, a simple custom sensor returning a canned finding to demonstrate the customization.
+
+- Create
+`.habit-hooks/ruby/sensors/custom-check.toml`:
+
+```toml
+command = "${dir}/custom-check.sh"
+```
+
+- Then create the executable `.habit-hooks/ruby/sensors/custom-check.sh`:
+
+```sh
+#!/bin/sh
+printf '%s\n' '[{"smell":"custom-check","details":{},"issues":[{"key":"app/models/example.rb","details":{"file":"app/models/example.rb","line":1,"message":"Canned custom-check result","source":"custom-check"}}]}]'
+```
+
+The sensor's issue paths should be relative to the project, and its
+output must always be a JSON array of findings.
+
+- Enable it by copying the entire `plugins/ruby/src/habit_hooks_ruby/config.toml` to `.habit-hooks/ruby/config.toml` and adding `"custom-check"` to the `sensors` list in the plugin config
+override. for example:
+```
+sensors = ["rubocop", "custom_check"]  
+```
