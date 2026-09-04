@@ -71,35 +71,35 @@ def tool_search_path(project_dir: Path) -> str:
     pinned rather than whatever is on the machine — and so an editor plugin and
     a hook, run under different shells, still measure alike.
 
-    ``bin`` is bundler's half of that, and it is not optional the way the other
-    two nearly are. A tool installed beside a project usually only *differs* in
-    version from the machine's; a rubocop run outside the project's bundle
-    cannot read the project's config at all. ``.rubocop.yml`` names its
-    extension gems (``rubocop-rails``, ``rubocop-rspec``), and a rubocop that
-    cannot load one answers ``Error: `Rails/*` has been extracted to the
-    rubocop-rails gem`` and exits. That is a crashed sensor for a config that is
-    perfectly good. ``bundle binstubs`` writes those binstubs here, and Rails
-    scaffolds the directory, so it is where a Ruby project keeps the tools it
-    pinned. It goes last of the three because it is the least specific name:
-    ``node_modules/.bin`` and ``.venv/bin`` can hold nothing else, where a
-    ``bin`` may hold a project's own scripts, and a script named after a tool
-    should not outrank a real install beside it.
+    Only directories that can hold nothing else are here: ``node_modules/.bin``
+    and ``.venv/bin`` are an install's own, where a directory a project may
+    keep its own scripts under — bundler's ``bin`` — could hold a script named
+    after a tool, and a script named after a tool should not outrank a real
+    install beside it. A plugin whose tools live in such a directory names it
+    on its detector instead (:attr:`detectors.Detector.search_paths`), and only
+    the lookups that ask for that tool search it.
     """
     node = project_dir / "node_modules" / ".bin"
     venv = venv_bin_dir(project_dir / ".venv")
-    binstubs = project_dir / "bin"
-    return os.pathsep.join(
-        [str(node), str(venv), str(binstubs), os.environ.get("PATH", "")]
-    )
+    return os.pathsep.join([str(node), str(venv), os.environ.get("PATH", "")])
 
 
-def tool_executable(name: str, project_dir: Path) -> str | None:
+def tool_executable(
+    name: str, project_dir: Path, search_paths: tuple[str, ...] = ()
+) -> str | None:
     """The file this project runs for the bare command ``name``, or ``None``.
 
     The single place a command's name becomes a file, because the two sides of
     that question must never come to different answers: ``missing_tools.py``
     clears a tool by asking it, and ``sensors/spawn.py`` spawns the very file
     it answered with.
+
+    ``search_paths`` names directories under the project that are searched
+    ahead of :func:`tool_search_path` — the ones a detector declared for this
+    tool (:attr:`detectors.Detector.search_paths`), which is how a directory
+    the default path does not know, bundler's ``bin``, still answers for the
+    one tool that lives in it. A tool nothing declared is looked for along the
+    default path alone.
 
     Leaving the name for the spawn to look up is what made them differ.
     ``subprocess`` spawns through ``CreateProcess`` on Windows, which appends
@@ -117,7 +117,9 @@ def tool_executable(name: str, project_dir: Path) -> str | None:
     before it leaves: it names the file that was actually found, and cannot
     come to mean another one in a spawn that runs somewhere else.
     """
-    found = shutil.which(name, path=tool_search_path(project_dir))
+    named = [str(project_dir / relative) for relative in search_paths]
+    search = os.pathsep.join([*named, tool_search_path(project_dir)])
+    found = shutil.which(name, path=search)
     return None if found is None else os.path.abspath(found)
 
 

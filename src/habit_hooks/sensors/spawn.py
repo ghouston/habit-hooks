@@ -85,7 +85,9 @@ class Spawner:
     def _runnable(self, argv: list[str], tools: Sequence[str]) -> list[str]:
         """``argv`` with its program named by the file this project runs for it.
 
-        A bare command name is the only thing in question. Left as a name it is
+        A bare command name is the only thing in question, and one a detector
+        declared arrives already resolved to its file (``command_text``) — this
+        lookup is the fallback for names nobody declared. Left as a name it is
         looked up by whatever the spawn uses, which on Windows is not the
         lookup the tool was cleared by — so this asks the one that cleared it
         (``project_paths.tool_executable``) and hands the spawn its answer.

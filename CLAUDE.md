@@ -1054,11 +1054,19 @@ name then answers `jscpd: command not found` with the tool sitting right there.
 uses.** Every one is `argv = ["${python}", "${dir}/<helper>.py", ...]` or
 `["node", "...cjs", ...]`, and the helper spawns `jscpd`/`pmd`/`php`/`deptry`/
 `ruff` itself, one process further in — where the tools that actually go missing
-on Windows go missing. `sensors/spawn.Spawner._runnable` still resolves a bare
-`argv[0]`, since off Windows it names the very file the spawn's own search would
-have reached; only a **bare** name is resolved, because a path (`${python}`,
-`${dir}/helper.py`) is read against the directory the command runs in, and every
-argument after the first is an argument whatever it looks like.
+on Windows go missing. A **bare** `argv[0]` that names a declared `command`
+detector is resolved through that detector — the loader puts it in
+`Part.detectors` (`named_tools._bare_program`) and `command_text._program`
+substitutes the file — so the bare spelling and `${detector:<name>}` agree on
+the same search paths, and a binstub in the project's `bin` is found by either
+spelling or by neither. `Spawner._runnable` still resolves a bare `argv[0]`,
+but only as the fallback for names nobody declared: off Windows such a name
+is the very file the spawn's own search would have reached, and a path
+(`${python}`, `${dir}/helper.py`) is read against the directory the command
+runs in, while every argument after the first is an argument whatever it looks
+like. The typescript plugin's `argv = ["node", ...]` parts now resolve `node`
+through its own declaration — the same file the fallback found, and a machine
+without node fails by name rather than at the spawn.
 
 The other process gets there by **naming the tool in the recipe**:
 `${detector:<name>}` (`sensors/named_tools.py`) expands to the file

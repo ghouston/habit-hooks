@@ -112,6 +112,26 @@ def test_a_declared_detector_keeps_its_kind_and_install_command(tmp_path: Path) 
     ]
 
 
+def test_a_declared_detector_keeps_the_search_paths_it_named(tmp_path: Path) -> None:
+    """The directories a plugin's tools live in are the plugin's to name —
+    bundler's ``bin`` is not every project's — so they travel with the detector
+    to every lookup that asks for it."""
+    bundled = (
+        '{ name = "rubocop", kind = "command", install = "gem install rubocop", '
+        'search_paths = ["bin"] }'
+    )
+    project = _project(tmp_path, 'plugins = ["alpha"]')
+    _plugin(project, "alpha", _declaring(bundled))
+    assert _detectors(project) == [
+        Detector(
+            name="rubocop",
+            kind="command",
+            install="gem install rubocop",
+            search_paths=("bin",),
+        )
+    ]
+
+
 def test_plugin_detectors_merge_in_plugins_order(tmp_path: Path) -> None:
     project = _project(tmp_path, 'plugins = ["alpha", "beta"]')
     _plugin(project, "alpha", _declaring(_entry("ruff"), _entry("deptry")))

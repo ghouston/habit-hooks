@@ -9,7 +9,8 @@ file is the whole point: a bare name is looked up again by whatever spawns it,
 and on Windows that lookup adds ``.exe`` and nothing else, where npm installs
 every Node tool as a ``.cmd`` shim.
 
-Only the tools a recipe actually names are resolved for it. A part answers for
+Only the tools a recipe actually names are resolved for it: a placeholder, or
+the bare program an ``argv`` spells as its first element. A part answers for
 what it reaches for and never for its plugin's other tools, or a project missing
 a tool no sensor of that plugin names would fail the sensors that never wanted
 it.
@@ -32,6 +33,7 @@ a missing command with (``broken_part.run_part``).
 
 from __future__ import annotations
 
+import os
 import re
 import shlex
 from collections.abc import Callable
@@ -64,8 +66,14 @@ class DeclaredTools:
     project_dir: Path
 
     def file_for(self, name: str) -> str | None:
-        """The file this project runs for the command ``name``, or ``None``."""
-        return tool_executable(name, self.project_dir)
+        """The file this project runs for the command ``name``, or ``None``.
+
+        Looked for along the search paths this run's plugins declared for it —
+        a directory the default path does not know, bundler's ``bin``, is the
+        declaring plugin's to name — so the question is the same one
+        ``missing_tools`` asks of the same detector.
+        """
+        return tool_executable(name, self.project_dir, _search_paths(name, self.declared))
 
     def kinds_of(self, name: str) -> list[str]:
         """Every way this run's plugins declare that ``name`` is looked for."""
@@ -81,11 +89,23 @@ class DeclaredTools:
         return named or "none"
 
 
+def _search_paths(name: str, declared: list[Detector]) -> tuple[str, ...]:
+    """Every directory under the project the declared detectors name for ``name``."""
+    return tuple(
+        path
+        for detector in declared
+        if detector.name == name
+        for path in detector.search_paths
+    )
+
+
 def files_for(part: Part, kind: str, tools: DeclaredTools) -> dict[str, str | None]:
     """The file this project runs for each tool ``part`` names, ``None`` if absent.
 
     A name that can never stand for a file at all stops the run here, naming the
-    part, why, and the config line that stops running it.
+    part, why, and the config line that stops running it. The bare program an
+    ``argv`` spells is a name too, resolved the same way and refused nothing:
+    a program nobody declared is the spawn's own to look up.
     """
     named = _names_in(part)
     for name in named:
@@ -95,7 +115,11 @@ def files_for(part: Part, kind: str, tools: DeclaredTools) -> dict[str, str | No
                 f"{kind} {part.name!r} names ${{detector:{name}}}, {unusable} — "
                 f"{switch_off(kind, part.name)}"
             )
-    return {name: tools.file_for(name) for name in named}
+    files = {name: tools.file_for(name) for name in named}
+    program = _bare_program(part)
+    if program and program not in files and COMMAND_KIND in tools.kinds_of(program):
+        files[program] = tools.file_for(program)
+    return files
 
 
 def spelled_plainly(part: Part, text: str) -> str:
@@ -126,6 +150,13 @@ def _names_in(part: Part) -> list[str]:
     """Every tool ``part``'s recipe names, in the order it first names them."""
     recipe = (part.command or "") if part.argv is None else " ".join(part.argv)
     return list(dict.fromkeys(DETECTOR.findall(recipe)))
+
+
+def _bare_program(part: Part) -> str | None:
+    """The program an ``argv`` recipe spells as a bare name, if it spells one."""
+    if part.argv is None or os.path.dirname(part.argv[0]):
+        return None
+    return part.argv[0]
 
 
 def _why_no_file_for(name: str, tools: DeclaredTools) -> str | None:

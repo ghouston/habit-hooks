@@ -59,8 +59,9 @@ Installing a plugin does not switch it on — it has to be named in
 bundle binstubs rubocop
 ```
 
-habit-hooks looks along `bin/` before the machine's `PATH`, so `bin/rubocop` is
-what it will run — under your bundle, with your extension gems loaded.
+habit-hooks' rubocop detector searches your project's `bin/` ahead of the
+machine's `PATH`, so `bin/rubocop` is what it will run — under your bundle,
+with your extension gems loaded.
 
 Without this, habit-hooks runs whatever `rubocop` your `PATH` answers with, and
 a config naming cops that rubocop cannot load is a hard error rather than a

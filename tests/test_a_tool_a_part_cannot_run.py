@@ -9,9 +9,10 @@ is refused; the part fails by name, its findings drop, and the reader is told wh
 to install and how to stop running it in the meantime.
 
 Every recipe here is the shape a shipped sensor has — a helper of its own, handed
-the tool it is to spawn — and never the tool as ``argv[0]``. That one fails at the
-spawn whatever the loader knew, so it would prove nothing; a helper handed a name
-it cannot run prints its clean ``[]`` and the run believes it, which is the
+the tool it is to spawn — and never the tool as ``argv[0]``: a declared one is
+refused before the spawn (``test_a_bare_program_names_its_tool``) and an
+undeclared one fails at it, so neither would prove anything; a helper handed a
+name it cannot run prints its clean ``[]`` and the run believes it, which is the
 false-clean these cases are about.
 """
 
