@@ -25,12 +25,14 @@ coaches your Ruby the way it already coached your Python and TypeScript.
   flag the sensor adds, so `AllCops: Exclude:` keeps applying once habit-hooks
   names files on the command line.
 
-- **`bin/` joins the tool search path**, after `node_modules/.bin` and
-  `.venv/bin`. It is where `bundle binstubs` writes binstubs, and for Ruby that
-  matters more than a version difference usually does: a `.rubocop.yml` naming
+- **A detector can name the directories its own tool lives in**, through
+  `search_paths` in a plugin's `config.toml`. The ruby plugin's rubocop detector
+  names `bin`, where `bundle binstubs` writes binstubs, and for Ruby that matters
+  more than a version difference usually does: a `.rubocop.yml` naming
   `rubocop-rails` or `rubocop-rspec` cannot be read at all by a rubocop outside
-  the bundle those gems live in. It ranks last of the three because `bin` is a
-  name a project may keep its own scripts under.
+  the bundle those gems live in. It stays off the default search path, which
+  every tool shares, because `bin` is a name a project may keep its own scripts
+  under.
 
 ### Fixed
 

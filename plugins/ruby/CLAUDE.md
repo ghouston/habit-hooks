@@ -91,7 +91,7 @@ The envelope check has one concern: a cop that *raises exceptions*.
 By default, RuboCop rescues the exception, reports the crash on stderr,
 and exits 1 with a valid envelope listing that file's offences as `[]`.
 This isn't what habit-hooks needs to detect the crash. So `--raise-cop-error`
-is used to make Rubocop crash becomes an `Error:` and exit 2, which
+is used to make a RuboCop crash become an `Error:` and exit 2, which
 habit-hooks interprets as a failed run.
 
 `tests/test_the_sensor_runs_the_rubocop_it_is_handed.py` has to hand `ruby` back

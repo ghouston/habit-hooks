@@ -8,12 +8,18 @@ This causes the agent to focus on fixing the smell rather than the metric.
 ```text
 ── high-complexity (1 issue) ──
 
-General guidance: the issues listed are code smells. They tell you that there is likely something wrong with the code. Follow these steps:
-- Ask yourself why the rule exists in the first place. What is it telling you about the code?
-- Find a fix that improves maintainability, cuts cruft — doing the same with fewer statements where that lowers cognitive load — and/or improves security, scalability, and resilience.
-- AVOID AT ALL COST: any fix that is designed to appease the reporting tool, but goes against the spirit of the warning.
+High cyclomatic complexity means one function makes too many decisions at once. The count is the symptom; tangled responsibilities are the cause.
 
-app/services/billing.rb:14
+**Untangle the decisions:**
+1. Lift guards out first — turn precondition checks into early returns so the happy path stays flat. Much of the count is preconditions wrapped around the real work.
+2. Change the shape of what remains: an `if`/`else` chain switching on one value is often a lookup table or polymorphism in disguise; a nested loop is often a filter/map pipeline.
+3. If the branches are genuinely separate jobs, extract one function per branch, each named for the responsibility it handles.
+
+Useful tip: describe each branch in one sentence. Two branches with the same sentence belong together; a branch you cannot name cleanly wants its own function.
+
+**AVOID**: merging conditions with and/or, or rewriting branches as ternaries, just to lower the score — the decisions remain, only the counter moves. You are done when a first-time reader can hold the whole function in their head.
+
+app/services/billing.rb:6
 ```
 
 # Setup
@@ -42,12 +48,15 @@ Installing a plugin does not switch it on — it has to be named in
 
 ```toml
 # .habit-hooks/config.toml
-plugins = ["ruby"]
+plugins = ["ruby", "generic"]
 ```
+
+Keep `generic` in the list. Most of the smells this plugin reports are coached
+by guides `generic` ships; without it they fall back to a short generic prompt.
 
 ## Sensors: install rubocop
 
-The ruby plugin supports the rubocop sensor. It can use the any rubocop on your `PATH`, but it is best to point it at the one your project uses. 
+The ruby plugin supports the rubocop sensor. It can use any rubocop on your `PATH`, but it is best to point it at the one your project uses. 
 
 Point it at your project's own rubocop:
 
@@ -80,7 +89,7 @@ habit-hooks reports that as a failed run.
 
 ### Configure your `.rubocop.yml`
 
-The sensor runs `rubocop` and reads what comes back.  The rubocop discovers your `.rubocop.yml`
+The sensor runs `rubocop` and reads what comes back.  RuboCop discovers your `.rubocop.yml`
 exactly as it does when you run rubocop by hand.  The `--force-exclusion` is the one flag
 habit-hooks adds, so your `AllCops: Exclude:` keeps applying even though habit-hooks names files
 explicitly.
@@ -103,7 +112,7 @@ Cops are mapped to canonical smells and are reported under it:
 All other cops are **forwarded under their own name** by default.
 Recommended: add coaches for cops as needed (see [Customization](#customization)).
 Set the root `uncoached` key to `ignore` to drop these cops,
-or `enforce` to fail on the run on them 
+or `enforce` to fail the run on them 
 ([config.md](https://github.com/habit-hooks/habit-hooks/blob/main/docs/config.md)).
 
 #### A starting `.rubocop.yml`
@@ -252,5 +261,5 @@ output must always be a JSON array of findings.
 - Enable it by copying the entire `plugins/ruby/src/habit_hooks_ruby/config.toml` to `.habit-hooks/ruby/config.toml` and adding `"custom-check"` to the `sensors` list in the plugin config
 override. for example:
 ```
-sensors = ["rubocop", "custom_check"]  
+sensors = ["rubocop", "custom-check"]  
 ```

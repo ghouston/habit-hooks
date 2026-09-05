@@ -161,8 +161,9 @@ does nothing for it.
 > `bin/rubocop` runs under your bundle with those gems loaded. A rubocop that cannot load a gem your config
 > names fails outright rather than linting, and habit-hooks reports that as a failed run.
 
-`habit-sensors` prepends `node_modules/.bin`, `.venv/bin` and `bin` to `PATH`, so a project's local tools are
-found without being installed globally.
+`habit-sensors` prepends `node_modules/.bin` and `.venv/bin` to `PATH`, so a project's local tools are found
+without being installed globally. A plugin whose tools live somewhere else names that directory on the
+detector — `bin` is rubocop's, and only rubocop is looked for there.
 
 </details>
 
