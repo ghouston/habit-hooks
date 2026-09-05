@@ -2,8 +2,7 @@
 
 The `simplified` rewrite, phase by phase. Source of truth for *what to build* is
 the executable specs in `docs/**/*.spec.md` and `plugins/*/docs/*.spec.md`; this file tracks *order* and the
-decisions taken while reconciling the docs. See [DECISIONS.md](DECISIONS.md) for
-rationale.
+decisions taken while reconciling the docs.
 
 ## Guiding rules (apply to every phase)
 
