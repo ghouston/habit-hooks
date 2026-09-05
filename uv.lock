@@ -75,7 +75,7 @@ wheels = [
 
 [[package]]
 name = "habit-hooks"
-version = "1.4.0"
+version = "1.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "attrs" },
@@ -159,32 +159,32 @@ dev = [
 
 [[package]]
 name = "habit-hooks-generic"
-version = "1.4.0"
+version = "1.5.0"
 source = { editable = "plugins/generic" }
 
 [[package]]
 name = "habit-hooks-java"
-version = "1.4.0"
+version = "1.5.0"
 source = { editable = "plugins/java" }
 
 [[package]]
 name = "habit-hooks-php"
-version = "1.4.0"
+version = "1.5.0"
 source = { editable = "plugins/php" }
 
 [[package]]
 name = "habit-hooks-python"
-version = "1.4.0"
+version = "1.5.0"
 source = { editable = "plugins/python" }
 
 [[package]]
 name = "habit-hooks-ruby"
-version = "1.4.0"
+version = "1.5.0"
 source = { editable = "plugins/ruby" }
 
 [[package]]
 name = "habit-hooks-typescript"
-version = "1.4.0"
+version = "1.5.0"
 source = { editable = "plugins/typescript" }
 
 [[package]]

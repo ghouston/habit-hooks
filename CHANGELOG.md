@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0
 
 Ruby. A `Gemfile` or a `.rubocop.yml` in your project and habit-hooks now
 coaches your Ruby the way it already coached your Python and TypeScript.
@@ -34,6 +34,11 @@ coaches your Ruby the way it already coached your Python and TypeScript.
   every tool shares, because `bin` is a name a project may keep its own scripts
   under.
 
+- **Java reports `deep-nesting`.** PMD's `AvoidDeeplyNestedIfStmts`, pinned to
+  `problemDepth=3` in the bundled ruleset, so the third nested `if` is the first
+  one reported. A project running its own PMD ruleset gets the smell only when
+  that ruleset enables the rule itself. Contributed by @renanfranca (#160).
+
 ### Fixed
 
 - **A wrapped tool that never started no longer reads as a clean file.** The
@@ -43,6 +48,13 @@ coaches your Ruby the way it already coached your Python and TypeScript.
   the report rather than the exit code: RuboCop prints its JSON envelope on
   every run it completed, so no envelope means no run, and the run fails instead
   of reporting nothing wrong.
+
+- **An uncoached smell no longer coaches in another language.** A smell no
+  plugin ships a guide for falls back to the `uncoached` guide, and that
+  fallback was resolved across every active plugin rather than the ones the
+  finding's own language names — so a project running two language plugins
+  could be handed the wrong language's wording for its own file. The fallback
+  now follows the same language-filtered order every other guide does.
 
 ## 1.4.0
 
