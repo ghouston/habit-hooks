@@ -44,6 +44,14 @@ jobs:
         # pnpm, not npm: only pnpm implements the install cooldown that .npmrc's
         # minimum-release-age asks for. Corepack (not pnpm's own auto-switch)
         # installs it, pinned to package.json's packageManager — see CLAUDE.md.
+        #
+        # COREPACK_ENABLE_DOWNLOAD_PROMPT=0 because Corepack asks the terminal to
+        # confirm the download whenever the pinned pnpm is not already cached, and
+        # a runner has no terminal to answer: Node aborts reading the closed stdin
+        # (`assert(!this.paused)`) and the step exits 1. It is a cache miss that
+        # decides, so the job passes until the day the image changes underneath it.
+        env:
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
         run: |
           corepack enable pnpm
           pnpm install --frozen-lockfile
