@@ -18,6 +18,10 @@ consumes — e.g. `duplicated-code` carries the duplicated block and its
 occurrences, not just a single `file`/`line`. See the finding contract in
 [sensor-interface.spec.md](sensor-interface.spec.md).
 
+A plugin section below lists only that plugin's own translation. Nothing here
+records which languages ship a given smell, so adding a plugin — or extending an
+existing one — cannot leave this page stale.
+
 ## Catalogue
 
 Default severity: `enforced` fails the run (exit 1); `suggested` coaches but
@@ -50,12 +54,6 @@ exits 0. The mapper config can override it per project.
 | `unused-import`             | Unused import                         | enforced         |
 | `swallowed-exception`       | Swallowed exception                   | suggested        |
 | `parse-error`               | Parse / config error                  | enforced         |
-
-`unused-import` was added as a general smell (agent decision) so ruff `F401`
-has a canonical home; see `DECISIONS.md`.
-
-`swallowed-exception` is the first smell sourced only from ruff (`BLE001`), with
-no TypeScript twin; it carries `source: 'ruff'`. See `DECISIONS.md`.
 
 ## TypeScript/JavaScript plugin translation
 
@@ -98,9 +96,9 @@ trailing `!`. The default pass produces the `knip:<key>` smells above; the gated
 A knip key with no row above (`binaries`, `duplicates`, `catalog`, and for now
 `unlisted`/`unresolved`) is **dropped at the sensor**. Translating a tool's key
 set into this vocabulary is the sensor's job, and a key forwarded under knip's own
-name would have no guide and no severity behind it. The eslint sensor is the
-deliberate exception — it passes an unmapped rule ID through, because that ID
-comes from a config the project wrote and turned on itself.
+name would have no guide and no severity behind it. The eslint sensor deliberately
+does the opposite — it passes an unmapped rule ID through, because that ID comes
+from a config the project wrote and turned on itself.
 
 ## Python plugin translation
 
@@ -121,12 +119,10 @@ only the plugin's sensors differ).
 | `deptry:DEP002`     | `unused-dependency`   |
 | `line-count:max-module-lines` | `oversized-file` |
 
-TS-only smells (`explicit-any`, `var-declaration`, …) simply do not appear in
-the Python plugin. `oversized-file` has no clean ruff rule, so the Python plugin
-reuses the generic line-count sensor (its `--max` threshold, default 200).
-`deep-nesting` ships for TypeScript (ESLint `max-depth`) and Java (PMD
-`AvoidDeeplyNestedIfStmts`). The Python equivalent (ruff `PLR1702`) is
-preview/unstable, so it is deferred rather than opting into ruff `--preview`.
+`oversized-file` has no clean ruff rule, so the Python plugin reuses the generic
+line-count sensor (its `--max` threshold, default 200). There is no row for
+`deep-nesting`: ruff's `PLR1702` is preview/unstable, so it is deferred rather
+than opting into ruff `--preview`.
 
 ## PHP plugin translation
 
@@ -143,9 +139,9 @@ catalogue is shared — only the plugin's sensors differ).
 
 The PHP plugin runs PHPMD (`codesize,unusedcode` rulesets) through a thin sensor
 that normalises PHPMD's exit-2-on-violations and maps its rule names to canonical
-smells. Like Python, `oversized-file` has no clean PHPMD rule, so the PHP plugin
-reuses the generic line-count sensor — add `generic` to the project's `plugins`
-list alongside `php` to get it. PHPMD's `NPathComplexity` overlaps
+smells. `oversized-file` has no clean PHPMD rule, so the PHP plugin reuses the
+generic line-count sensor — add `generic` to the project's `plugins` list
+alongside `php` to get it. PHPMD's `NPathComplexity` overlaps
 `CyclomaticComplexity`, so only the latter is mapped to avoid double-reporting the
 same function.
 
@@ -202,8 +198,8 @@ catalogue is shared, only the plugin's sensors differ).
 | `rubocop:Lint/Syntax`                   | `parse-error`         |
 
 **A cop with no row above is forwarded under its own name, not dropped.** This
-is the second deliberate exception to "a sensor emits vocabulary smells only",
-and it is the eslint one for the same reason. The test is whose vocabulary a key
+is a deliberate exception to "a sensor emits vocabulary smells only", for the
+same reason the eslint sensor is one. The test is whose vocabulary a key
 belongs to: knip's key set is knip's own, but a cop only fires because the
 project's `.rubocop.yml` switched it on, so forwarding it is forwarding the
 project's own decision. What arrives uncatalogued is then the root `uncoached`
