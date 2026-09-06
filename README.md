@@ -92,7 +92,7 @@ brew install habit-hooks/tap/habit-hooks
 ```
 
 You get **core plus the generic plugin**, and four commands on your `PATH`: `habit-hooks`, `habit-sensors`,
-`habit-mapper`, `habit-snooze`. Homebrew is the exception — it installs all five plugins, so skip to step 3.
+`habit-mapper`, `habit-snooze`. Homebrew is the exception — it installs every plugin we ship, so skip to step 3.
 
 > ⚠️ **On its own this checks nothing about your language.** The generic plugin measures file length and
 > duplication. Python, TypeScript, PHP, Java and Ruby each need their own plugin — installed (step 2) *and*
@@ -100,12 +100,12 @@ You get **core plus the generic plugin**, and four commands on your `PATH`: `hab
 
 ### 2. Install the plugin for your language
 
-The four language plugins are **opt-in** via extras:
+The language plugins are **opt-in** via extras:
 
 ```sh
 uv tool install "habit-hooks[typescript]"          # one language
 uv tool install "habit-hooks[python,typescript]"   # several — name them in one command
-uv tool install "habit-hooks[all]"                 # all four
+uv tool install "habit-hooks[all]"                 # every language
 ```
 
 > ⚠️ Each `uv tool install` **rebuilds** the environment rather than adding to it, so a second one naming a
@@ -328,7 +328,7 @@ Everything language- or tool-specific lives in a **plugin** — a self-contained
   guides/          # how it coaches each fix
 ```
 
-The five that ship:
+The plugins we ship:
 
 | Plugin | Language | Sensors | Tools used |
 |--------|----------|---------|------------|
